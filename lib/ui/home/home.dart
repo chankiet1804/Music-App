@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music_app/data/model/song.dart';
 import 'package:music_app/ui/discovery/discovery.dart';
+import 'package:music_app/ui/home/song_item.dart';
 import 'package:music_app/ui/home/viewmodal.dart';
 import 'package:music_app/ui/settings/settings.dart';
 import 'package:music_app/ui/user/user.dart';
@@ -101,6 +102,12 @@ class _HomeTabPageState extends State<HomeTabPage> {
   }
 
   @override
+  void dispose() {
+    _viewModel.songStream.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: songs.isEmpty
@@ -109,9 +116,14 @@ class _HomeTabPageState extends State<HomeTabPage> {
               itemCount: songs.length,
               itemBuilder: (context, index) {
                 final song = songs[index];
-                return ListTile(
-                  title: Text(song.title),
-                  subtitle: Text(song.artist),
+                return SongItem(
+                  song: song,
+                  onTap: () {
+                    // Handle song tap
+                  },
+                  onMorePressed: () {
+                    // Handle more button press
+                  },
                 );
               },
               separatorBuilder: (context, index) => const Divider(
