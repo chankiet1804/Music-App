@@ -1,6 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:music_app/data/model/song.dart';
 import 'package:music_app/ui/discovery/discovery.dart';
+import 'package:music_app/ui/home/viewmodal.dart';
 import 'package:music_app/ui/settings/settings.dart';
 import 'package:music_app/ui/user/user.dart';
 
@@ -75,6 +77,58 @@ class HomeTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('Home Tab')));
+    return const HomeTabPage();
+  }
+}
+
+class HomeTabPage extends StatefulWidget {
+  const HomeTabPage({super.key});
+
+  @override
+  State<HomeTabPage> createState() => _HomeTabPageState();
+}
+
+class _HomeTabPageState extends State<HomeTabPage> {
+  List<Song> songs = [];
+  late MusicAppViewModel _viewModel;
+
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = MusicAppViewModel();
+    _viewModel.loadSongs();
+    observeData();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: songs.isEmpty
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.separated(
+              itemCount: songs.length,
+              itemBuilder: (context, index) {
+                final song = songs[index];
+                return ListTile(
+                  title: Text(song.title),
+                  subtitle: Text(song.artist),
+                );
+              },
+              separatorBuilder: (context, index) => const Divider(
+                color: Colors.grey,
+                thickness: 1.0,
+                indent: 24,
+                endIndent: 24,
+              ),
+            ),
+    );
+  }
+
+  void observeData() {
+    _viewModel.songStream.stream.listen((data) {
+      setState(() {
+        songs.addAll(data);
+      });
+    });
   }
 }
