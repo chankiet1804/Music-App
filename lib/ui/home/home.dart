@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_app/data/model/song.dart';
 import 'package:music_app/ui/home/song_item.dart';
 import 'package:music_app/ui/home/viewmodal.dart';
@@ -40,7 +41,7 @@ class _HomeTabPageState extends State<HomeTabPage> {
                 return SongItem(
                   song: song,
                   onTap: () {
-                    // Handle song tap
+                    context.go('/playing/${song.id}');
                   },
                   onMorePressed: () {
                     // Handle more button press
