@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_app/data/providers.dart';
 import 'package:music_app/ui/home/song_item.dart';
+import 'package:music_app/ui/playing/providers.dart';
 
 class HomeTabPage extends ConsumerWidget {
   const HomeTabPage({super.key});
@@ -33,7 +34,8 @@ class HomeTabPage extends ConsumerWidget {
             return SongItem(
               song: song,
               onTap: () {
-                context.go('/playing/${song.id}');
+                ref.read(playerControllerProvider.notifier).load(song);
+                context.go('/playing');
               },
               onMorePressed: () {
                 // Handle more button press

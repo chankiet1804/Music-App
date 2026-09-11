@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_app/data/model/song.dart';
+import 'package:music_app/data/providers.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DurationState {
@@ -24,6 +25,7 @@ final playerControllerProvider = NotifierProvider<PlayerController, Song?>(
 
 class PlayerController extends Notifier<Song?> {
   AudioPlayer get _player => ref.read(audioPlayerProvider);
+  List<Song> get _songs => ref.read(songsProvider).value ?? const [];
 
   @override
   Song? build() => null;
@@ -40,6 +42,20 @@ class PlayerController extends Notifier<Song?> {
   Future<void> pause() => _player.pause();
 
   Future<void> seek(Duration position) => _player.seek(position);
+
+  Future<void> next() => _skip(1);
+
+  Future<void> prev() => _skip(-1);
+
+  Future<void> _skip(int step) async {
+    final songs = _songs;
+    if (songs.isEmpty) return;
+    final index = songs.indexWhere((s) => s.id == state?.id);
+    final target = index == -1 ? 0 : (index + step) % songs.length;
+    await load(songs[target]);
+    // Not awaited: just_audio's play() completes only when playback stops.
+    _player.play();
+  }
 }
 
 final playerStateProvider = StreamProvider<PlayerState>((ref) {

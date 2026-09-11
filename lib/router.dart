@@ -12,9 +12,9 @@ final GoRouter router = GoRouter(
       },
       routes: <RouteBase>[
         GoRoute(
-          path: 'playing/:id',
+          path: 'playing',
           builder: (BuildContext context, GoRouterState state) {
-            return Playing(songId: state.pathParameters['id']!);
+            return const Playing();
           },
         ),
       ],
