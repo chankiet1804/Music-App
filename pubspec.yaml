@@ -37,6 +37,9 @@ dependencies:
   http: ^1.6.0
   device_preview: ^3.0.0
   go_router: ^18.0.1
+  just_audio: ^0.10.6
+  rxdart: ^0.28.0
+  audio_video_progress_bar: ^2.0.3
 
 dev_dependencies:
   flutter_test:
