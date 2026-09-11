@@ -1,38 +1,34 @@
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:music_app/data/model/song.dart';
-import 'package:music_app/ui/playing/audio_player_manager.dart';
+import 'package:music_app/data/providers.dart';
 import 'package:music_app/ui/playing/media_button_control.dart';
-import 'package:music_app/ui/playing/viewmodal.dart';
+import 'package:music_app/ui/playing/providers.dart';
 
-class Playing extends StatefulWidget {
+class Playing extends ConsumerStatefulWidget {
   const Playing({super.key, required this.songId});
 
   final String songId;
 
   @override
-  State<Playing> createState() => _PlayingState();
+  ConsumerState<Playing> createState() => _PlayingState();
 }
 
-class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
-  final _viewModel = PlayingViewModel();
-  late final Future<Song?> _songFuture;
-
+class _PlayingState extends ConsumerState<Playing>
+    with SingleTickerProviderStateMixin {
   late AnimationController _imageAnimationController;
-
-  AudioPlayerManager? _audioPlayerManager;
 
   @override
   void initState() {
     super.initState();
-    _songFuture = _viewModel.loadSong(widget.songId).then((song) {
+    ref.listenManual(songByIdProvider(widget.songId), (_, next) {
+      final song = next.value;
       if (song != null) {
-        _audioPlayerManager = AudioPlayerManager(songUrl: song.source)..init();
+        ref.read(playerControllerProvider.notifier).load(song);
       }
-      return song;
-    });
+    }, fireImmediately: true);
     _imageAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12000),
@@ -41,16 +37,14 @@ class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
-    _audioPlayerManager?.player.dispose();
     _imageAnimationController.dispose();
     super.dispose();
   }
 
-  StreamBuilder<DurationState> _progressBar() {
-    return StreamBuilder<DurationState>(
-      stream: _audioPlayerManager?.durationState,
-      builder: (context, snapshot) {
-        final durationState = snapshot.data;
+  Widget _progressBar() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final durationState = ref.watch(durationStateProvider).value;
         final progress = durationState?.progress ?? Duration.zero;
         final buffered = durationState?.buffered ?? Duration.zero;
         final total = durationState?.total ?? Duration.zero;
@@ -60,7 +54,7 @@ class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
           buffered: buffered,
           total: total,
           onSeek: (duration) {
-            _audioPlayerManager?.player.seek(duration);
+            ref.read(playerControllerProvider.notifier).seek(duration);
           },
           barHeight: 5.0,
         );
@@ -111,11 +105,11 @@ class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
     );
   }
 
-  StreamBuilder<PlayerState> _playButton() {
-    return StreamBuilder<PlayerState>(
-      stream: _audioPlayerManager?.player.playerStateStream,
-      builder: (context, snapshot) {
-        final playerState = snapshot.data;
+  Widget _playButton() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final playerState = ref.watch(playerStateProvider).value;
+        final controller = ref.read(playerControllerProvider.notifier);
         final processingState = playerState?.processingState;
         final playing = playerState?.playing;
 
@@ -129,27 +123,21 @@ class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
           );
         } else if (playing != true) {
           return MediaButtonControl(
-            function: () {
-              _audioPlayerManager?.player.play();
-            },
+            function: controller.play,
             icon: Icons.play_arrow,
             size: 48.0,
             color: null,
           );
         } else if (processingState != ProcessingState.completed) {
           return MediaButtonControl(
-            function: () {
-              _audioPlayerManager?.player.pause();
-            },
+            function: controller.pause,
             icon: Icons.pause,
             size: 48.0,
             color: null,
           );
         } else {
           return MediaButtonControl(
-            function: () {
-              _audioPlayerManager?.player.seek(Duration.zero);
-            },
+            function: () => controller.seek(Duration.zero),
             icon: Icons.replay,
             size: 48.0,
             color: null,
@@ -171,13 +159,11 @@ class _PlayingState extends State<Playing> with SingleTickerProviderStateMixin {
         trailing: IconButton(icon: Icon(Icons.more_horiz), onPressed: null),
       ),
       child: Scaffold(
-        body: FutureBuilder<Song?>(
-          future: _songFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState != ConnectionState.done) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            final song = snapshot.data;
+        body: ref.watch(songByIdProvider(widget.songId)).when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, stackTrace) =>
+              const Center(child: Text('Failed to load song')),
+          data: (song) {
             if (song == null) {
               return const Center(child: Text('Song not found'));
             }
