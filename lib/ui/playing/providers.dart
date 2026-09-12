@@ -84,6 +84,27 @@ class ShuffleModeController extends Notifier<bool> {
   }
 }
 
+final repeatModeProvider = NotifierProvider<RepeatModeController, LoopMode>(
+  RepeatModeController.new,
+);
+
+class RepeatModeController extends Notifier<LoopMode> {
+  AudioPlayer get _player => ref.read(audioPlayerProvider);
+
+  @override
+  LoopMode build() => LoopMode.off;
+
+  void toggle() {
+    state = switch (state) {
+      LoopMode.off => LoopMode.one,
+      LoopMode.one => LoopMode.all,
+      LoopMode.all => LoopMode.off,
+    };
+    // Repeat-one is handled natively by the player.
+    _player.setLoopMode(state == LoopMode.one ? LoopMode.one : LoopMode.off);
+  }
+}
+
 final playerStateProvider = StreamProvider<PlayerState>((ref) {
   return ref.watch(audioPlayerProvider).playerStateStream;
 });

@@ -90,15 +90,31 @@ class _PlayingState extends ConsumerState<Playing>
           ),
           MediaButtonControl(
             function: () {
-              null; // Implement next track functionality
+              ref.read(repeatModeProvider.notifier).toggle();
             },
-            icon: Icons.repeat,
-            color: Colors.deepPurple,
+            icon: _getRepeatIcon(),
+            color: _getRepeatIconColor(),
             size: 24,
           ),
         ],
       ),
     );
+  }
+
+  IconData _getRepeatIcon() {
+    return switch (ref.watch(repeatModeProvider)) {
+      LoopMode.off => Icons.repeat,
+      LoopMode.one => Icons.repeat_one,
+      LoopMode.all => Icons.repeat,
+    };
+  }
+
+  Color _getRepeatIconColor() {
+    return switch (ref.watch(repeatModeProvider)) {
+      LoopMode.off => Colors.grey,
+      LoopMode.one => Colors.deepPurple,
+      LoopMode.all => Colors.deepPurple,
+    };
   }
 
   void _syncRotation(bool playing) {
