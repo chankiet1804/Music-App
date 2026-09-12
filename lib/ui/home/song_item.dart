@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_app/data/model/song.dart';
+import 'package:music_app/theme/theme.dart';
 
 class SongItem extends StatelessWidget {
   final Song song;
@@ -16,16 +17,19 @@ class SongItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      contentPadding: const EdgeInsets.only(left: 24.0, right: 16.0),
       leading: ClipRRect(
-        borderRadius: BorderRadius.circular(16.0),
+        borderRadius: BorderRadius.circular(AppRadius.md),
         child: FadeInImage.assetNetwork(
           placeholder: 'assets/ITunes_logo.png',
           image: song.image,
-          width: 48,
-          height: 48,
+          width: AppIconSize.lg,
+          height: AppIconSize.lg,
           imageErrorBuilder: (context, error, stackTrace) {
-            return Image.asset('assets/ITunes_logo.png', width: 48, height: 48);
+            return Image.asset(
+              'assets/ITunes_logo.png',
+              width: AppIconSize.lg,
+              height: AppIconSize.lg,
+            );
           },
         ),
       ),

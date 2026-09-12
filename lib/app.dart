@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_app/router.dart';
+import 'package:music_app/theme/theme.dart';
 
 class MysicApp extends StatelessWidget {
   const MysicApp({super.key});
@@ -10,10 +11,9 @@ class MysicApp extends StatelessWidget {
       routerConfig: router,
       title: 'Mysic App',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.dark,
+      darkTheme: AppTheme.dark,
+      themeMode: ThemeMode.dark,
     );
   }
 }

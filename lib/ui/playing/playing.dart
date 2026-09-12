@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/playing/media_button_control.dart';
 import 'package:music_app/ui/playing/providers.dart';
 
@@ -36,6 +37,8 @@ class _PlayingState extends ConsumerState<Playing>
   Widget _progressBar() {
     return Consumer(
       builder: (context, ref, child) {
+        final cs = Theme.of(context).colorScheme;
+        final tokens = AppTokens.of(context);
         final durationState = ref.watch(durationStateProvider).value;
         final progress = durationState?.progress ?? Duration.zero;
         final buffered = durationState?.buffered ?? Duration.zero;
@@ -48,13 +51,21 @@ class _PlayingState extends ConsumerState<Playing>
           onSeek: (duration) {
             ref.read(playerControllerProvider.notifier).seek(duration);
           },
-          barHeight: 5.0,
+          barHeight: AppBorders.progressBar,
+          baseBarColor: cs.onSurface,
+          progressBarColor: cs.primary,
+          bufferedBarColor: tokens.textMuted,
+          thumbColor: cs.primary,
+          timeLabelTextStyle: Theme.of(context).textTheme.labelSmall,
         );
       },
     );
   }
 
   Widget _mediaButtons() {
+    final cs = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
+
     return SizedBox(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -65,9 +76,9 @@ class _PlayingState extends ConsumerState<Playing>
             },
             icon: Icons.shuffle,
             color: ref.watch(shuffleModeProvider)
-                ? Colors.deepPurple
-                : Colors.grey,
-            size: 24,
+                ? cs.primary
+                : tokens.textMuted,
+            size: AppIconSize.sm,
           ),
           MediaButtonControl(
             function: () {
@@ -75,8 +86,8 @@ class _PlayingState extends ConsumerState<Playing>
               _imageAnimationController.reset();
             },
             icon: Icons.skip_previous,
-            color: Colors.deepPurple,
-            size: 36,
+            color: cs.onSurface,
+            size: AppIconSize.md,
           ),
           _playButton(),
           MediaButtonControl(
@@ -85,16 +96,16 @@ class _PlayingState extends ConsumerState<Playing>
               _imageAnimationController.reset();
             },
             icon: Icons.skip_next,
-            color: Colors.deepPurple,
-            size: 36,
+            color: cs.onSurface,
+            size: AppIconSize.md,
           ),
           MediaButtonControl(
             function: () {
               ref.read(repeatModeProvider.notifier).toggle();
             },
             icon: _getRepeatIcon(),
-            color: _getRepeatIconColor(),
-            size: 24,
+            color: _getRepeatIconColor(context),
+            size: AppIconSize.sm,
           ),
         ],
       ),
@@ -109,11 +120,13 @@ class _PlayingState extends ConsumerState<Playing>
     };
   }
 
-  Color _getRepeatIconColor() {
+  Color _getRepeatIconColor(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tokens = AppTokens.of(context);
     return switch (ref.watch(repeatModeProvider)) {
-      LoopMode.off => Colors.grey,
-      LoopMode.one => Colors.deepPurple,
-      LoopMode.all => Colors.deepPurple,
+      LoopMode.off => tokens.textMuted,
+      LoopMode.one => cs.primary,
+      LoopMode.all => cs.primary,
     };
   }
 
@@ -143,9 +156,9 @@ class _PlayingState extends ConsumerState<Playing>
         if (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering) {
           return Container(
-            margin: const EdgeInsets.all(8.0),
-            width: 48.0,
-            height: 48.0,
+            margin: const EdgeInsets.all(AppSpacing.sm),
+            width: AppIconSize.lg,
+            height: AppIconSize.lg,
             child: const CircularProgressIndicator(),
           );
         } else if (playing != true) {
@@ -154,7 +167,7 @@ class _PlayingState extends ConsumerState<Playing>
               controller.play();
             },
             icon: Icons.play_arrow,
-            size: 48.0,
+            size: AppIconSize.lg,
             color: null,
           );
         } else if (processingState != ProcessingState.completed) {
@@ -163,7 +176,7 @@ class _PlayingState extends ConsumerState<Playing>
               controller.pause();
             },
             icon: Icons.pause,
-            size: 48.0,
+            size: AppIconSize.lg,
             color: null,
           );
         } else {
@@ -173,7 +186,7 @@ class _PlayingState extends ConsumerState<Playing>
               _imageAnimationController.reset(),
             },
             icon: Icons.replay,
-            size: 48.0,
+            size: AppIconSize.lg,
             color: null,
           );
         }
@@ -184,7 +197,7 @@ class _PlayingState extends ConsumerState<Playing>
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    const delta = 64.0;
+    const delta = AppSpacing.huge;
     final radius = (screenWidth - delta) / 2;
 
     final song = ref.watch(playerControllerProvider);
@@ -193,22 +206,36 @@ class _PlayingState extends ConsumerState<Playing>
       _syncRotation(_shouldSpin(next.value));
     });
 
+    final theme = Theme.of(context);
+    final tokens = AppTokens.of(context);
+
     return CupertinoPageScaffold(
-      navigationBar: const CupertinoNavigationBar(
-        middle: Text('Now Playing'),
-        trailing: IconButton(icon: Icon(Icons.more_horiz), onPressed: null),
+      navigationBar: CupertinoNavigationBar(
+        middle: const Text('Now Playing'),
+        trailing: const IconButton(
+          icon: Icon(Icons.more_horiz),
+          onPressed: null,
+        ),
+        border: Border(bottom: BorderSide(color: tokens.barBorder, width: 0.0)),
       ),
       child: Scaffold(
         body: song == null
-            ? const Center(child: Text('No song is playing'))
+            ? Center(
+                child: Text(
+                  'No song is playing',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: tokens.textMuted,
+                  ),
+                ),
+              )
             : Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(song.album),
-                    const SizedBox(height: 16),
-                    const Text('_ ___ _'),
-                    const SizedBox(height: 32),
+                    Text(song.album, style: theme.textTheme.labelSmall),
+                    const SizedBox(height: AppSpacing.lg),
+                    Text('_ ___ _', style: theme.textTheme.labelSmall),
+                    const SizedBox(height: AppSpacing.xxl),
                     RotationTransition(
                       turns: Tween(
                         begin: 0.0,
@@ -217,14 +244,14 @@ class _PlayingState extends ConsumerState<Playing>
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(radius),
                         child: FadeInImage.assetNetwork(
-                          placeholder: 'assets/images/placeholder.png',
+                          placeholder: 'assets/ITunes_logo.png',
                           image: song.image,
                           width: screenWidth - delta,
                           height: screenWidth - delta,
                           fit: BoxFit.cover,
                           imageErrorBuilder: (context, error, stackTrace) {
                             return Image.asset(
-                              'assets/images/placeholder.png',
+                              'assets/ITunes_logo.png',
                               width: screenWidth - delta,
                               height: screenWidth - delta,
                               fit: BoxFit.cover,
@@ -234,14 +261,17 @@ class _PlayingState extends ConsumerState<Playing>
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(top: 64.0, bottom: 16.0),
+                      padding: const EdgeInsets.only(
+                        top: AppSpacing.huge,
+                        bottom: AppSpacing.lg,
+                      ),
                       child: SizedBox(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.share_outlined),
-                              color: Theme.of(context).colorScheme.primary,
+                              color: theme.colorScheme.primary,
                               onPressed: () {
                                 // Handle share button press
                               },
@@ -250,30 +280,18 @@ class _PlayingState extends ConsumerState<Playing>
                               children: [
                                 Text(
                                   song.title,
-                                  style: Theme.of(context).textTheme.bodyMedium!
-                                      .copyWith(
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .color,
-                                      ),
+                                  style: theme.textTheme.titleLarge,
                                 ),
-                                const SizedBox(height: 8),
+                                const SizedBox(height: AppSpacing.sm),
                                 Text(
                                   song.artist,
-                                  style: Theme.of(context).textTheme.bodyMedium!
-                                      .copyWith(
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium!
-                                            .color,
-                                      ),
+                                  style: theme.textTheme.bodySmall,
                                 ),
                               ],
                             ),
                             IconButton(
                               icon: const Icon(Icons.favorite_outline),
-                              color: Theme.of(context).colorScheme.primary,
+                              color: theme.colorScheme.primary,
                               onPressed: () {},
                             ),
                           ],
@@ -282,15 +300,17 @@ class _PlayingState extends ConsumerState<Playing>
                     ),
                     Padding(
                       padding: const EdgeInsets.only(
-                        top: 32,
-                        left: 24,
-                        right: 24,
-                        bottom: 16,
+                        top: AppSpacing.xxl,
+                        left: AppSpacing.screenH,
+                        right: AppSpacing.screenH,
+                        bottom: AppSpacing.lg,
                       ),
                       child: _progressBar(),
                     ),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.screenH,
+                      ),
                       child: _mediaButtons(),
                     ),
                   ],

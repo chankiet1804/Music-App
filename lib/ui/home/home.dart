@@ -19,7 +19,10 @@ class HomeTabPage extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('Failed to load songs'),
+              Text(
+                'Failed to load songs',
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
               TextButton(
                 onPressed: () => ref.invalidate(songsProvider),
                 child: const Text('Retry'),
@@ -42,12 +45,7 @@ class HomeTabPage extends ConsumerWidget {
               },
             );
           },
-          separatorBuilder: (context, index) => const Divider(
-            color: Colors.grey,
-            thickness: 1.0,
-            indent: 24,
-            endIndent: 24,
-          ),
+          separatorBuilder: (context, index) => const Divider(),
         ),
       ),
     );
