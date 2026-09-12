@@ -22,8 +22,9 @@ class _PlayingState extends ConsumerState<Playing>
     super.initState();
     _imageAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 12000),
+      duration: const Duration(milliseconds: 12000),
     );
+    _syncRotation(_shouldSpin(ref.read(playerStateProvider).value));
   }
 
   @override
@@ -69,6 +70,7 @@ class _PlayingState extends ConsumerState<Playing>
           MediaButtonControl(
             function: () {
               ref.read(playerControllerProvider.notifier).prev();
+              _imageAnimationController.reset();
             },
             icon: Icons.skip_previous,
             color: Colors.deepPurple,
@@ -78,6 +80,7 @@ class _PlayingState extends ConsumerState<Playing>
           MediaButtonControl(
             function: () {
               ref.read(playerControllerProvider.notifier).next();
+              _imageAnimationController.reset();
             },
             icon: Icons.skip_next,
             color: Colors.deepPurple,
@@ -95,6 +98,21 @@ class _PlayingState extends ConsumerState<Playing>
       ),
     );
   }
+
+  void _syncRotation(bool playing) {
+    if (playing) {
+      if (!_imageAnimationController.isAnimating) {
+        _imageAnimationController.repeat();
+      }
+    } else {
+      _imageAnimationController.stop();
+    }
+  }
+
+  bool _shouldSpin(PlayerState? state) =>
+      (state?.playing ?? false) &&
+      state?.processingState != ProcessingState.completed &&
+      state?.processingState != ProcessingState.loading;
 
   Widget _playButton() {
     return Consumer(
@@ -114,21 +132,28 @@ class _PlayingState extends ConsumerState<Playing>
           );
         } else if (playing != true) {
           return MediaButtonControl(
-            function: controller.play,
+            function: () {
+              controller.play();
+            },
             icon: Icons.play_arrow,
             size: 48.0,
             color: null,
           );
         } else if (processingState != ProcessingState.completed) {
           return MediaButtonControl(
-            function: controller.pause,
+            function: () {
+              controller.pause();
+            },
             icon: Icons.pause,
             size: 48.0,
             color: null,
           );
         } else {
           return MediaButtonControl(
-            function: () => controller.seek(Duration.zero),
+            function: () => {
+              controller.seek(Duration.zero),
+              _imageAnimationController.reset(),
+            },
             icon: Icons.replay,
             size: 48.0,
             color: null,
@@ -145,6 +170,10 @@ class _PlayingState extends ConsumerState<Playing>
     final radius = (screenWidth - delta) / 2;
 
     final song = ref.watch(playerControllerProvider);
+
+    ref.listen(playerStateProvider, (_, next) {
+      _syncRotation(_shouldSpin(next.value));
+    });
 
     return CupertinoPageScaffold(
       navigationBar: const CupertinoNavigationBar(
