@@ -61,10 +61,12 @@ class _PlayingState extends ConsumerState<Playing>
         children: [
           MediaButtonControl(
             function: () {
-              null; // Implement previous track functionality
+              ref.read(shuffleModeProvider.notifier).toggle();
             },
             icon: Icons.shuffle,
-            color: Colors.deepPurple,
+            color: ref.watch(shuffleModeProvider)
+                ? Colors.deepPurple
+                : Colors.grey,
             size: 24,
           ),
           MediaButtonControl(
