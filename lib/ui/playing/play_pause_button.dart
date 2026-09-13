@@ -99,7 +99,7 @@ class PlayPauseButton extends ConsumerWidget {
     } else if (processingState != ProcessingState.completed) {
       onTap = controller.pause;
       child = SvgPicture.asset(
-        PlayerIcons.pause,
+        AppIcons.pause,
         height: size * 1.125,
         colorFilter: ColorFilter.mode(cs.onPrimary, BlendMode.srcIn),
       );

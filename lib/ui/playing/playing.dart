@@ -46,7 +46,7 @@ class _PlayingState extends ConsumerState<Playing>
           MediaButtonControl(
             function: () =>
                 context.canPop() ? context.pop() : context.go('/'),
-            svgAsset: PlayerIcons.arrowLeft,
+            svgAsset: AppIcons.arrowLeft,
             color: cs.onSurface,
             size: AppIconSize.sm,
           ),
@@ -61,7 +61,7 @@ class _PlayingState extends ConsumerState<Playing>
           ),
           MediaButtonControl(
             function: () {},
-            svgAsset: PlayerIcons.heart,
+            svgAsset: AppIcons.heart,
             color: tokens.textMuted,
             size: AppIconSize.sm,
           ),
@@ -115,7 +115,7 @@ class _PlayingState extends ConsumerState<Playing>
           function: () {
             ref.read(shuffleModeProvider.notifier).toggle();
           },
-          svgAsset: PlayerIcons.shuffle,
+          svgAsset: AppIcons.shuffle,
           color: ref.watch(shuffleModeProvider) ? cs.primary : cs.onSurface,
           size: AppIconSize.sm,
         ),
@@ -124,7 +124,7 @@ class _PlayingState extends ConsumerState<Playing>
             ref.read(playerControllerProvider.notifier).prev();
             _imageAnimationController.reset();
           },
-          svgAsset: PlayerIcons.skipBack,
+          svgAsset: AppIcons.skipBack,
           color: cs.onSurface,
           size: AppIconSize.sm,
         ),
@@ -138,7 +138,7 @@ class _PlayingState extends ConsumerState<Playing>
             ref.read(playerControllerProvider.notifier).next();
             _imageAnimationController.reset();
           },
-          svgAsset: PlayerIcons.skipForward,
+          svgAsset: AppIcons.skipForward,
           color: cs.onSurface,
           size: AppIconSize.sm,
         ),
@@ -149,7 +149,7 @@ class _PlayingState extends ConsumerState<Playing>
               function: () {
                 ref.read(repeatModeProvider.notifier).toggle();
               },
-              svgAsset: PlayerIcons.repeat,
+              svgAsset: AppIcons.repeat,
               color: repeatMode == LoopMode.off ? cs.onSurface : cs.primary,
               size: AppIconSize.sm,
             ),
