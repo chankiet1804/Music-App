@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/playing/media_button_control.dart';
+import 'package:music_app/ui/playing/play_pause_button.dart';
 import 'package:music_app/ui/playing/providers.dart';
 
 class Playing extends ConsumerStatefulWidget {
@@ -89,7 +90,7 @@ class _PlayingState extends ConsumerState<Playing>
             color: cs.onSurface,
             size: AppIconSize.md,
           ),
-          _playButton(),
+          PlayPauseButton(onReplay: _imageAnimationController.reset),
           MediaButtonControl(
             function: () {
               ref.read(playerControllerProvider.notifier).next();
@@ -144,55 +145,6 @@ class _PlayingState extends ConsumerState<Playing>
       (state?.playing ?? false) &&
       state?.processingState != ProcessingState.completed &&
       state?.processingState != ProcessingState.loading;
-
-  Widget _playButton() {
-    return Consumer(
-      builder: (context, ref, child) {
-        final playerState = ref.watch(playerStateProvider).value;
-        final controller = ref.read(playerControllerProvider.notifier);
-        final processingState = playerState?.processingState;
-        final playing = playerState?.playing;
-
-        if (processingState == ProcessingState.loading ||
-            processingState == ProcessingState.buffering) {
-          return Container(
-            margin: const EdgeInsets.all(AppSpacing.sm),
-            width: AppIconSize.lg,
-            height: AppIconSize.lg,
-            child: const CircularProgressIndicator(),
-          );
-        } else if (playing != true) {
-          return MediaButtonControl(
-            function: () {
-              controller.play();
-            },
-            icon: Icons.play_arrow,
-            size: AppIconSize.lg,
-            color: null,
-          );
-        } else if (processingState != ProcessingState.completed) {
-          return MediaButtonControl(
-            function: () {
-              controller.pause();
-            },
-            icon: Icons.pause,
-            size: AppIconSize.lg,
-            color: null,
-          );
-        } else {
-          return MediaButtonControl(
-            function: () => {
-              controller.seek(Duration.zero),
-              _imageAnimationController.reset(),
-            },
-            icon: Icons.replay,
-            size: AppIconSize.lg,
-            color: null,
-          );
-        }
-      },
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

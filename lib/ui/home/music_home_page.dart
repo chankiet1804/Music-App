@@ -4,6 +4,7 @@ import 'package:music_app/ui/discovery/discovery.dart';
 import 'package:music_app/ui/favorite/favorite.dart';
 import 'package:music_app/ui/home/app_bottom_nav_bar.dart';
 import 'package:music_app/ui/home/home.dart';
+import 'package:music_app/ui/home/mini_player.dart';
 import 'package:music_app/ui/user/user.dart';
 
 class MusicHomePage extends StatefulWidget {
@@ -44,6 +45,14 @@ class _MusicHomePageState extends State<MusicHomePage> {
           // IndexedStack keeps every tab alive, matching CupertinoTabScaffold.
           Expanded(
             child: IndexedStack(index: _currentIndex, children: _tabs),
+          ),
+          const Padding(
+            padding: EdgeInsets.only(
+              left: AppNavBar.inset,
+              right: AppNavBar.inset,
+              bottom: AppSpacing.sm,
+            ),
+            child: MiniPlayer(),
           ),
           AppBottomNavBar(
             items: _navItems,
