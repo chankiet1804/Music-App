@@ -46,14 +46,15 @@ class _MusicHomePageState extends State<MusicHomePage> {
           Expanded(
             child: IndexedStack(index: _currentIndex, children: _tabs),
           ),
-          const Padding(
-            padding: EdgeInsets.only(
-              left: AppNavBar.inset,
-              right: AppNavBar.inset,
-              bottom: AppSpacing.sm,
+          if (_currentIndex == 0)
+            const Padding(
+              padding: EdgeInsets.only(
+                left: AppNavBar.inset,
+                right: AppNavBar.inset,
+                bottom: AppSpacing.sm,
+              ),
+              child: MiniPlayer(),
             ),
-            child: MiniPlayer(),
-          ),
           AppBottomNavBar(
             items: _navItems,
             currentIndex: _currentIndex,

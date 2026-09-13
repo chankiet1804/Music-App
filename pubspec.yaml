@@ -41,6 +41,7 @@ dependencies:
   rxdart: ^0.28.0
   audio_video_progress_bar: ^2.0.3
   flutter_riverpod: ^3.4.3
+  flutter_svg: ^2.3.0
 
 dev_dependencies:
   flutter_test:
@@ -97,6 +98,7 @@ flutter:
   assets:
     - assets/songs.json
     - assets/ITunes_logo.png
+    - assets/icons/
 
   fonts:
     - family: Nunito

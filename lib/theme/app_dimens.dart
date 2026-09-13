@@ -38,5 +38,5 @@ abstract final class AppNavBar {
 
 abstract final class AppBorders {
   static const double hairline = 1.0;
-  static const double progressBar = 5.0;
+  static const double progressBar = 3.0;
 }
