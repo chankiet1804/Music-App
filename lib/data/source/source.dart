@@ -9,11 +9,17 @@ abstract interface class DataSource {
 }
 
 class RemoteDataSource implements DataSource {
+  RemoteDataSource({http.Client? client}) : _client = client ?? http.Client();
+
+  final http.Client _client;
+
+  static const _timeout = Duration(seconds: 10);
+
   @override
   Future<List<Song>?> loadData() async {
     const url = 'https://thantrieu.com/resources/braniumapis/songs.json';
     final uri = Uri.parse(url);
-    final response = await http.get(uri);
+    final response = await _client.get(uri).timeout(_timeout);
     if (response.statusCode == 200) {
       final bodyContent = utf8.decode(
         response.bodyBytes,
