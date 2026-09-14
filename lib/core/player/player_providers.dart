@@ -1,9 +1,7 @@
-import 'dart:math';
-
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_app/data/model/song.dart';
-import 'package:music_app/data/providers.dart';
 import 'package:rxdart/rxdart.dart';
 
 class DurationState {
@@ -16,29 +14,59 @@ class DurationState {
 
 // Single app-wide player so playback survives leaving the Playing screen.
 final audioPlayerProvider = Provider<AudioPlayer>((ref) {
-  final player = AudioPlayer();
+  // Skip broken sources instead of stalling the queue.
+  final player = AudioPlayer(maxSkipsOnError: 3);
   ref.onDispose(player.dispose);
   return player;
 });
+
+// Single place mapping Song <-> player source; swap tag to MediaItem for
+// background playback.
+AudioSource _sourceOf(Song song) =>
+    AudioSource.uri(Uri.parse(song.source), tag: song);
+
+Song? _songOf(IndexedAudioSource? source) => switch (source?.tag) {
+  final Song song => song,
+  _ => null,
+};
 
 final playerControllerProvider = NotifierProvider<PlayerController, Song?>(
   PlayerController.new,
 );
 
+/// Sends commands to the player and mirrors its current song. The queue,
+/// auto-advance, shuffle order and looping are owned by the player itself.
 class PlayerController extends Notifier<Song?> {
-  final _random = Random();
-
   AudioPlayer get _player => ref.read(audioPlayerProvider);
-  List<Song> get _songs => ref.read(songsProvider).value ?? const [];
 
   @override
-  Song? build() => null;
+  Song? build() {
+    final player = ref.watch(audioPlayerProvider);
+    final sub = player.sequenceStateStream.listen(
+      (sequence) => state = _songOf(sequence.currentSource),
+    );
+    ref.onDispose(sub.cancel);
+    return _songOf(player.sequenceState.currentSource);
+  }
 
-  Future<void> load(Song song) async {
-    // Same song already loaded: keep current position.
-    if (state?.id == song.id) return;
-    state = song;
-    await _player.setUrl(song.source);
+  /// Loads [queue] and selects [index] without starting playback.
+  Future<void> load(List<Song> queue, int index) async {
+    final sequence = _player.sequenceState;
+    if (_isLoaded(sequence, queue)) {
+      // Same song already loaded: keep current position.
+      if (sequence.currentIndex == index) return;
+      await _player.seek(Duration.zero, index: index);
+      return;
+    }
+    try {
+      await _player.setAudioSources([
+        for (final song in queue) _sourceOf(song),
+      ], initialIndex: index);
+    } on PlayerInterruptedException catch (e) {
+      debugPrint('Queue load interrupted: $e');
+    } on PlayerException catch (e) {
+      debugPrint('Queue load failed: $e');
+    }
   }
 
   Future<void> play() => _player.play();
@@ -51,23 +79,27 @@ class PlayerController extends Notifier<Song?> {
 
   Future<void> prev() => _skip(-1);
 
+  // Manual skips always wrap and ignore repeat-one, unlike seekToNext().
   Future<void> _skip(int step) async {
-    final songs = _songs;
-    if (songs.isEmpty) return;
-    final index = songs.indexWhere((s) => s.id == state?.id);
-    final target = ref.read(shuffleModeProvider)
-        ? _randomIndex(songs.length, index)
-        : (index == -1 ? 0 : (index + step) % songs.length);
-    await load(songs[target]);
+    final sequence = _player.sequenceState;
+    final current = sequence.currentIndex;
+    if (sequence.sequence.isEmpty || current == null) return;
+    final order = sequence.shuffleModeEnabled
+        ? sequence.shuffleIndices
+        : List.generate(sequence.sequence.length, (i) => i);
+    final target = order[(order.indexOf(current) + step) % order.length];
+    await _player.seek(Duration.zero, index: target);
     // Not awaited: just_audio's play() completes only when playback stops.
     _player.play();
   }
 
-  // Random pick that avoids repeating the current song when possible.
-  int _randomIndex(int length, int current) {
-    if (length == 1 || current == -1) return _random.nextInt(length);
-    final offset = 1 + _random.nextInt(length - 1);
-    return (current + offset) % length;
+  bool _isLoaded(SequenceState sequence, List<Song> queue) {
+    final loaded = sequence.sequence;
+    if (loaded.length != queue.length) return false;
+    for (var i = 0; i < queue.length; i++) {
+      if (_songOf(loaded[i])?.id != queue[i].id) return false;
+    }
+    return queue.isNotEmpty;
   }
 }
 
@@ -76,11 +108,16 @@ final shuffleModeProvider = NotifierProvider<ShuffleModeController, bool>(
 );
 
 class ShuffleModeController extends Notifier<bool> {
+  AudioPlayer get _player => ref.read(audioPlayerProvider);
+
   @override
   bool build() => false;
 
-  void toggle() {
+  Future<void> toggle() async {
     state = !state;
+    // Fresh permutation starting from the current song.
+    if (state) await _player.shuffle();
+    await _player.setShuffleModeEnabled(state);
   }
 }
 
@@ -100,8 +137,7 @@ class RepeatModeController extends Notifier<LoopMode> {
       LoopMode.one => LoopMode.all,
       LoopMode.all => LoopMode.off,
     };
-    // Repeat-one is handled natively by the player.
-    _player.setLoopMode(state == LoopMode.one ? LoopMode.one : LoopMode.off);
+    _player.setLoopMode(state);
   }
 }
 

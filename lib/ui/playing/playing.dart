@@ -122,7 +122,6 @@ class _PlayingState extends ConsumerState<Playing>
         MediaButtonControl(
           function: () {
             ref.read(playerControllerProvider.notifier).prev();
-            _imageAnimationController.reset();
           },
           svgAsset: AppIcons.skipBack,
           color: cs.onSurface,
@@ -136,7 +135,6 @@ class _PlayingState extends ConsumerState<Playing>
         MediaButtonControl(
           function: () {
             ref.read(playerControllerProvider.notifier).next();
-            _imageAnimationController.reset();
           },
           svgAsset: AppIcons.skipForward,
           color: cs.onSurface,
@@ -195,6 +193,11 @@ class _PlayingState extends ConsumerState<Playing>
 
     ref.listen(playerStateProvider, (_, next) {
       _syncRotation(_shouldSpin(next.value));
+    });
+
+    // Covers manual skips and native auto-advance alike.
+    ref.listen(playerControllerProvider, (prev, next) {
+      if (prev?.id != next?.id) _imageAnimationController.reset();
     });
 
     final theme = Theme.of(context);
