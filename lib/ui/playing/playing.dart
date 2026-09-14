@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_app/core/player/player_providers.dart';
+import 'package:music_app/shared/widgets/media_button_control.dart';
+import 'package:music_app/shared/widgets/play_pause_button.dart';
 import 'package:music_app/theme/theme.dart';
-import 'package:music_app/ui/playing/media_button_control.dart';
-import 'package:music_app/ui/playing/play_pause_button.dart';
-import 'package:music_app/ui/playing/providers.dart';
 
 class Playing extends ConsumerStatefulWidget {
   const Playing({super.key});

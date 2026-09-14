@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:music_app/core/player/player_providers.dart';
+import 'package:music_app/shared/widgets/media_button_control.dart';
 import 'package:music_app/theme/theme.dart';
-import 'package:music_app/ui/playing/media_button_control.dart';
-import 'package:music_app/ui/playing/providers.dart';
 
 /// Play/pause/replay button driven by [playerStateProvider]. Shared between
 /// the full [Playing] screen and the mini player, sized via [size].
