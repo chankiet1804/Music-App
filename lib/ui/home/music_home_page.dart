@@ -1,20 +1,14 @@
 import 'package:flutter/cupertino.dart';
+import 'package:go_router/go_router.dart';
 import 'package:music_app/theme/theme.dart';
-import 'package:music_app/ui/discovery/discovery.dart';
-import 'package:music_app/ui/favorite/favorite.dart';
 import 'package:music_app/ui/home/app_bottom_nav_bar.dart';
-import 'package:music_app/ui/home/home.dart';
 import 'package:music_app/ui/home/mini_player.dart';
-import 'package:music_app/ui/user/user.dart';
 
-class MusicHomePage extends StatefulWidget {
-  const MusicHomePage({super.key});
+class MusicHomePage extends StatelessWidget {
+  const MusicHomePage({super.key, required this.navigationShell});
 
-  @override
-  State<MusicHomePage> createState() => _MusicHomePageState();
-}
+  final StatefulNavigationShell navigationShell;
 
-class _MusicHomePageState extends State<MusicHomePage> {
   static const List<BottomNavigationBarItem> _navItems = [
     BottomNavigationBarItem(icon: Icon(CupertinoIcons.house, size: 24)),
     BottomNavigationBarItem(icon: Icon(CupertinoIcons.music_note_2, size: 24)),
@@ -22,18 +16,10 @@ class _MusicHomePageState extends State<MusicHomePage> {
     BottomNavigationBarItem(icon: Icon(CupertinoIcons.person, size: 24)),
   ];
 
-  final List<Widget> _tabs = [
-    const HomeTabPage(),
-    const DiscoveryTab(),
-    const FavoriteTab(),
-    const AccountTab(),
-  ];
-
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final tokens = AppTokens.of(context);
+    final currentIndex = navigationShell.currentIndex;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -42,11 +28,9 @@ class _MusicHomePageState extends State<MusicHomePage> {
       ),
       child: Column(
         children: [
-          // IndexedStack keeps every tab alive, matching CupertinoTabScaffold.
-          Expanded(
-            child: IndexedStack(index: _currentIndex, children: _tabs),
-          ),
-          if (_currentIndex == 0)
+          // Branch navigators are kept alive in an IndexedStack by go_router.
+          Expanded(child: navigationShell),
+          if (currentIndex == 0)
             const Padding(
               padding: EdgeInsets.only(
                 left: AppNavBar.inset,
@@ -57,8 +41,12 @@ class _MusicHomePageState extends State<MusicHomePage> {
             ),
           AppBottomNavBar(
             items: _navItems,
-            currentIndex: _currentIndex,
-            onTap: (index) => setState(() => _currentIndex = index),
+            currentIndex: currentIndex,
+            // Re-tapping the active tab pops it back to its root.
+            onTap: (index) => navigationShell.goBranch(
+              index,
+              initialLocation: index == currentIndex,
+            ),
           ),
         ],
       ),

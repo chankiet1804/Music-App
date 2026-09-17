@@ -38,7 +38,7 @@ class HomeTabPage extends ConsumerWidget {
               song: song,
               onTap: () {
                 ref.read(playerControllerProvider.notifier).load(songs, index);
-                context.go('/playing');
+                context.push('/playing');
               },
               onMorePressed: () {
                 // Handle more button press

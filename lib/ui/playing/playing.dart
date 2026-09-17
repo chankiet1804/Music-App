@@ -45,7 +45,7 @@ class _PlayingState extends ConsumerState<Playing>
         children: [
           MediaButtonControl(
             function: () =>
-                context.canPop() ? context.pop() : context.go('/'),
+                context.canPop() ? context.pop() : context.go('/home'),
             svgAsset: AppIcons.arrowLeft,
             color: cs.onSurface,
             size: AppIconSize.sm,

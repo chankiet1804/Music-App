@@ -24,7 +24,7 @@ class MiniPlayer extends ConsumerWidget {
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => context.go('/playing'),
+      onTap: () => context.push('/playing'),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppRadius.md),
         child: BackdropFilter(
