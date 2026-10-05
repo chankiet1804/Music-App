@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "538559689432",
+    "project_id": "music-app-9b65c",
+    "storage_bucket": "music-app-9b65c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:538559689432:android:c40af5389d9ff778391dad",
+        "android_client_info": {
+          "package_name": "com.kiet.music_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHKXlLs6IjN66wpI5Tk5GPHuLsenvjqZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
