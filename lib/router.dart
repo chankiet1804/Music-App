@@ -32,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/home',
     // Signed-out users are kept on /login; signed-in users are kept off it.
     redirect: (BuildContext context, GoRouterState state) {
-      final signedIn = ref.read(firebaseAuthProvider).currentUser != null;
+      final signedIn = ref.read(authServiceProvider).currentUser != null;
       final atLogin = state.matchedLocation == _loginPath;
       if (!signedIn) return atLogin ? null : _loginPath;
       if (atLogin) return '/home';

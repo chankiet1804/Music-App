@@ -40,10 +40,10 @@ Cập nhật bảng này mỗi khi xong một giai đoạn.
 | Phần | Trạng thái | Ghi chú |
 |---|---|---|
 | Nền tảng | — | Chỉ Android (`com.kiet.music_app`) và iOS. FlutterFire hỗ trợ đầy đủ cả hai |
-| `firebase_core`, `flutterfire configure` | ❌ | Giai đoạn 0 |
+| `firebase_core`, `flutterfire configure` | ✅ | Khởi tạo trong [main.dart](../lib/main.dart) |
 | Crashlytics | ❌ | Đang chỉ `debugPrint` lỗi ở [repository.dart](../lib/data/repository/repository.dart) |
 | Analytics | ❌ | |
-| Auth | ❌ | Tab Account ([user.dart](../lib/ui/user/user.dart)) mới là placeholder |
+| Auth | ⚠️ | Email/password xong (đăng nhập, đăng ký, quên mật khẩu, đăng xuất). Google/Apple chưa |
 | Firestore (favorites, history) | ❌ | Tab Favorite ([favorite.dart](../lib/ui/favorite/favorite.dart)) mới là placeholder |
 | Xác thực socket chat bằng ID token | ❌ | Spec chat hiện để server tin luôn `userId` từ `handshake.auth` |
 | FCM | ❌ | Socket không nhận được tin khi app đóng |
@@ -113,16 +113,20 @@ lib/
   firebase_options.dart              ← sinh bởi flutterfire configure, không sửa tay
   core/
     auth/
-      auth_repository.dart           ← interface + FirebaseAuthRepository
-      auth_providers.dart            ← authRepositoryProvider, authStateProvider
+      auth_providers.dart            ← authServiceProvider, authStateProvider
+      auth_controller.dart           ← AuthController (AsyncNotifier): sign in/up, reset, sign out
     monitoring/
       crash_reporter.dart            ← bọc Crashlytics
   data/
+    model/
+      app_user.dart, auth_failure.dart
+    service/
+      auth_service.dart              ← interface + FirebaseAuthService
     repository/
       favorite_repository.dart       ← interface + FirestoreFavoriteRepository
     favorite_providers.dart
 test/
-  fakes/                             ← FakeAuthRepository, FakeFavoriteRepository
+  fakes/                             ← FakeAuthService, FakeFavoriteRepository
 ```
 
 Khi viết code thật, nếu thấy chỗ khác hợp hơn với cấu trúc lúc đó thì sửa lại mục này cho khớp.
@@ -144,8 +148,8 @@ abstract interface class FavoriteRepository {
 
 | Provider | Loại | Ghi chú |
 |---|---|---|
-| `authRepositoryProvider` | `Provider` | Override trong test |
-| `authStateProvider` | `StreamProvider<User?>` | Bọc `authStateChanges()` |
+| `authServiceProvider` | `Provider` | Override trong test |
+| `authStateProvider` | `StreamProvider<AppUser?>` | Bọc `AuthService.authStateChanges()` |
 | `favoriteIdsProvider` | `StreamProvider<Set<String>>` | Phụ thuộc `authStateProvider`. Chưa đăng nhập thì trả set rỗng |
 | `favoriteSongsProvider` | `FutureProvider<List<Song>>` | Ghép `favoriteIdsProvider` với `songsProvider` |
 
@@ -201,13 +205,16 @@ Làm theo thứ tự. Mỗi giai đoạn tự đứng được và commit riêng
 
 ### Giai đoạn 2: Authentication + tab Account
 
-- [ ] Thêm `firebase_auth` (+ `google_sign_in`, `sign_in_with_apple` nếu dùng)
+- [x] Thêm `firebase_auth` (+ `google_sign_in`, `sign_in_with_apple` nếu dùng)
+- [x] Email/password: `AuthService` ([auth_service.dart](../lib/data/service/auth_service.dart)), `AuthController`, màn Login gộp sign in / sign up, quên mật khẩu, gửi mail xác minh sau khi đăng ký (không chặn), Sign out ở tab Account
+- [x] Test với `FakeAuthService`
+- Ghi chú: luồng anonymous-first bên dưới **chưa áp dụng**. Hiện tại bắt buộc đăng nhập trước khi vào app
 - [ ] Bật provider trên Console: Anonymous, Google (Android cần SHA-1/SHA-256 của keystore debug và release), Apple (bắt buộc nếu lên App Store mà có đăng nhập mạng xã hội)
-- [ ] `AuthRepository` interface: `authStateChanges()`, `signInAnonymously()`, `signInWithGoogle()`, `signOut()`, `getIdToken()`
+- [ ] Mở rộng `AuthService`: `signInAnonymously()`, `signInWithGoogle()`, `getIdToken()`
 - [ ] Luồng: mở app → nếu chưa có user thì đăng nhập ẩn danh → nghe nhạc ngay. Ở tab Account cho phép **nâng cấp** lên Google/Apple bằng `linkWithCredential` để giữ nguyên `uid` và dữ liệu
 - [ ] Tab Account: avatar, tên, nút đăng nhập/đăng xuất
 - [ ] Router: `redirect` và `refreshListenable` (mục 5.4)
-- [ ] Test với `FakeAuthRepository`
+- [ ] Test các provider mới với `FakeAuthService`
 
 **Xong khi:** đăng nhập ẩn danh → nâng lên Google → `uid` không đổi; đăng xuất → về trạng thái chưa đăng nhập.
 
@@ -321,6 +328,8 @@ Làm sau khi phần chat MVP trong [socketio-chat.md](socketio-chat.md) đã ch�
 | Gọi trực tiếp `FirebaseFirestore.instance` trong widget | Không test được, khó đổi backend | Đi qua repository (mục 5.2) |
 | Test gọi plugin Firebase thật | Test fail vì chưa khởi tạo Firebase | Override provider bằng fake |
 | Listener Firestore không hủy | Tốn lượt đọc, rò rỉ bộ nhớ | Dùng `StreamProvider`; dùng `autoDispose` nếu chỉ một màn cần |
+| Bắt lỗi `user-not-found` / `wrong-password` khi đăng nhập | Project bật Email Enumeration Protection (mặc định từ 09/2023) chỉ trả `invalid-credential` | Map cả 3 code về cùng một message (xem [auth_failure.dart](../lib/data/model/auth_failure.dart)) |
+| iOS giữ phiên đăng nhập trong Keychain sau khi gỡ app | Cài lại app vẫn đang đăng nhập (FlutterFire #4661) | **Chưa xử lý.** Cách làm: cờ `first_run` trong `shared_preferences`, không có thì `signOut()` |
 | Dùng Dynamic Links | Dịch vụ đã ngừng | App Links / Universal Links + go_router |
 | Đưa file nhạc lên Cloud Storage | Hóa đơn egress lớn | Giữ nguồn nhạc ở server hiện tại hoặc CDN riêng |
 
@@ -333,3 +342,4 @@ Ghi một dòng mỗi khi xong một giai đoạn hoặc đổi một quyết đ
 | Ngày | Thay đổi |
 |---|---|
 | 2026-10-11 | Tạo tài liệu: nguyên tắc, bản đồ dịch vụ, lộ trình 0–6 |
+| 2026-10-11 | Giai đoạn 2: xong email/password auth. Auth dùng `AuthService` (data/service) thay cho tên `AuthRepository` |
