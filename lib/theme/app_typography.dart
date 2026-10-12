@@ -1,6 +1,5 @@
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:music_app/theme/app_colors.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 abstract final class AppFont {
   static const String family = 'Nunito';
@@ -99,28 +98,39 @@ abstract final class AppTypography {
     height: 1.40,
   );
 
-  static TextTheme textTheme(ColorScheme cs) => TextTheme(
-    headlineMedium: _headlineMedium.copyWith(color: cs.onSurface),
-    headlineSmall: _headlineSmall.copyWith(color: cs.onSurface),
-    titleLarge: _titleLarge.copyWith(color: cs.onSurface),
-    titleMedium: _titleMedium.copyWith(color: cs.onSurface),
-    titleSmall: _titleSmall.copyWith(color: cs.onSurface),
-    bodyLarge: _bodyLarge.copyWith(color: cs.onSurface),
-    bodyMedium: _bodyMedium.copyWith(color: cs.onSurface),
-    bodySmall: _bodySmall.copyWith(color: cs.onSurfaceVariant),
-    labelLarge: _labelLarge.copyWith(color: cs.onSurface),
-    labelMedium: _labelMedium.copyWith(color: cs.onSurfaceVariant),
-    labelSmall: _labelSmall.copyWith(color: AppColors.textMuted),
+  /// Shad slots carry the Figma scale; styles Shad has no slot for go in
+  /// [ShadTextTheme.custom] and are read via [AppShadText].
+  static ShadTextTheme shadTextTheme(ShadColorScheme cs) => ShadTextTheme(
+    family: AppFont.family,
+    h2: _headlineMedium.copyWith(color: cs.foreground),
+    h3: _headlineSmall.copyWith(color: cs.foreground),
+    h4: _titleLarge.copyWith(color: cs.foreground),
+    large: _titleMedium.copyWith(color: cs.foreground),
+    p: _bodyLarge.copyWith(color: cs.foreground),
+    small: _labelMedium.copyWith(color: cs.foreground),
+    muted: _bodySmall.copyWith(color: cs.mutedForeground),
+    custom: {
+      _title: _titleSmall.copyWith(color: cs.foreground),
+      _caption: _labelSmall.copyWith(color: cs.mutedForeground),
+    },
   );
 
-  /// Cupertino bars do not read TextTheme, so the same scale is mirrored here.
-  static CupertinoTextThemeData cupertinoTextTheme(ColorScheme cs) =>
+  /// Cupertino bars do not read ShadTextTheme, so the same scale is mirrored here.
+  static CupertinoTextThemeData cupertinoTextTheme(ShadColorScheme cs) =>
       CupertinoTextThemeData(
         primaryColor: cs.primary,
-        textStyle: _bodyMedium.copyWith(color: cs.onSurface),
-        navTitleTextStyle: _titleMedium.copyWith(color: cs.onSurface),
-        navLargeTitleTextStyle: _headlineMedium.copyWith(color: cs.onSurface),
-        tabLabelTextStyle: _labelSmall,
+        textStyle: _bodyMedium.copyWith(color: cs.foreground),
+        navTitleTextStyle: _titleMedium.copyWith(color: cs.foreground),
+        navLargeTitleTextStyle: _headlineMedium.copyWith(color: cs.foreground),
+        tabLabelTextStyle: _labelSmall.copyWith(color: cs.mutedForeground),
         actionTextStyle: _labelLarge.copyWith(color: cs.primary),
       );
+
+  static const String _title = 'title';
+  static const String _caption = 'caption';
+}
+
+extension AppShadText on ShadTextTheme {
+  TextStyle get title => custom[AppTypography._title]!;
+  TextStyle get caption => custom[AppTypography._caption]!;
 }

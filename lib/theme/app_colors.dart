@@ -1,7 +1,7 @@
 import 'package:flutter/painting.dart';
 
 /// Raw Figma palette. The only place hex literals live.
-/// Never reference these from UI - go through ColorScheme or AppTokens.
+/// Never reference these from UI - go through ShadTheme.of(context).colorScheme.
 abstract final class AppColors {
   static const Color background = Color(0xFF0A071E);
   static const Color surface = Color(0xFF0A091E);
@@ -17,8 +17,12 @@ abstract final class AppColors {
   static const Color textSecondary = Color(0xFFDEDEDE);
   static const Color textMuted = Color(0xFF8E8E8E);
 
+  /// Not from Figma: shadcn dark default, needed by the Shad color scheme.
+  static const Color destructive = Color(0xFFEF4444);
+
   // Derived. Alpha is pre-computed so these stay const.
   static const Color divider = Color(0x338E8E8E); // textMuted @ 20%
   static const Color barBorder = Color(0x1F8E8E8E); // textMuted @ 12%
   static const Color navShadow = Color(0x1AA8BACF); // rgba(168,186,207,0.1)
+  static const Color selection = Color(0x666156E2); // primary @ 40%
 }

@@ -7,6 +7,7 @@ import 'package:music_app/core/player/player_providers.dart';
 import 'package:music_app/shared/widgets/media_button_control.dart';
 import 'package:music_app/shared/widgets/play_pause_button.dart';
 import 'package:music_app/theme/theme.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class Playing extends ConsumerStatefulWidget {
   const Playing({super.key});
@@ -36,8 +37,8 @@ class _PlayingState extends ConsumerState<Playing>
   }
 
   Widget _header(String title) {
-    final cs = Theme.of(context).colorScheme;
-    final tokens = AppTokens.of(context);
+    final theme = ShadTheme.of(context);
+    final cs = theme.colorScheme;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
@@ -46,8 +47,8 @@ class _PlayingState extends ConsumerState<Playing>
           MediaButtonControl(
             function: () =>
                 context.canPop() ? context.pop() : context.go('/home'),
-            svgAsset: AppIcons.arrowLeft,
-            color: cs.onSurface,
+            icon: LucideIcons.arrowLeft,
+            color: cs.foreground,
             size: AppIconSize.sm,
           ),
           Expanded(
@@ -56,13 +57,13 @@ class _PlayingState extends ConsumerState<Playing>
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.titleMedium,
+              style: theme.textTheme.large,
             ),
           ),
           MediaButtonControl(
             function: () {},
-            svgAsset: AppIcons.heart,
-            color: tokens.textMuted,
+            icon: LucideIcons.heart,
+            color: cs.mutedForeground,
             size: AppIconSize.sm,
           ),
         ],
@@ -73,8 +74,8 @@ class _PlayingState extends ConsumerState<Playing>
   Widget _progressBar() {
     return Consumer(
       builder: (context, ref, child) {
-        final cs = Theme.of(context).colorScheme;
-        final tokens = AppTokens.of(context);
+        final theme = ShadTheme.of(context);
+        final cs = theme.colorScheme;
         final durationState = ref.watch(durationStateProvider).value;
         final progress = durationState?.progress ?? Duration.zero;
         final buffered = durationState?.buffered ?? Duration.zero;
@@ -88,24 +89,22 @@ class _PlayingState extends ConsumerState<Playing>
             ref.read(playerControllerProvider.notifier).seek(duration);
           },
           barHeight: AppBorders.progressBar,
-          baseBarColor: cs.onSurface,
+          baseBarColor: cs.foreground,
           progressBarColor: cs.primary,
-          bufferedBarColor: tokens.textMuted,
+          bufferedBarColor: cs.mutedForeground,
           thumbColor: cs.primary,
           thumbRadius: AppBorders.progressBar,
           thumbGlowRadius: AppSpacing.lg,
           timeLabelLocation: TimeLabelLocation.below,
           timeLabelPadding: AppSpacing.xs,
-          timeLabelTextStyle: Theme.of(
-            context,
-          ).textTheme.labelMedium?.copyWith(color: cs.onSurface),
+          timeLabelTextStyle: theme.textTheme.small,
         );
       },
     );
   }
 
   Widget _mediaButtons() {
-    final cs = Theme.of(context).colorScheme;
+    final cs = ShadTheme.of(context).colorScheme;
     final repeatMode = ref.watch(repeatModeProvider);
 
     return Row(
@@ -115,16 +114,16 @@ class _PlayingState extends ConsumerState<Playing>
           function: () {
             ref.read(shuffleModeProvider.notifier).toggle();
           },
-          svgAsset: AppIcons.shuffle,
-          color: ref.watch(shuffleModeProvider) ? cs.primary : cs.onSurface,
+          icon: LucideIcons.shuffle,
+          color: ref.watch(shuffleModeProvider) ? cs.primary : cs.foreground,
           size: AppIconSize.sm,
         ),
         MediaButtonControl(
           function: () {
             ref.read(playerControllerProvider.notifier).prev();
           },
-          svgAsset: AppIcons.skipBack,
-          color: cs.onSurface,
+          icon: LucideIcons.skipBack,
+          color: cs.foreground,
           size: AppIconSize.sm,
         ),
         PlayPauseButton(
@@ -136,34 +135,19 @@ class _PlayingState extends ConsumerState<Playing>
           function: () {
             ref.read(playerControllerProvider.notifier).next();
           },
-          svgAsset: AppIcons.skipForward,
-          color: cs.onSurface,
+          icon: LucideIcons.skipForward,
+          color: cs.foreground,
           size: AppIconSize.sm,
         ),
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            MediaButtonControl(
-              function: () {
-                ref.read(repeatModeProvider.notifier).toggle();
-              },
-              svgAsset: AppIcons.repeat,
-              color: repeatMode == LoopMode.off ? cs.onSurface : cs.primary,
-              size: AppIconSize.sm,
-            ),
-            // Feather has no repeat-one glyph, so mark it with a badge.
-            if (repeatMode == LoopMode.one)
-              IgnorePointer(
-                child: Text(
-                  '1',
-                  style: TextStyle(
-                    color: cs.primary,
-                    fontSize: 9,
-                    fontWeight: AppFont.semiBold,
-                  ),
-                ),
-              ),
-          ],
+        MediaButtonControl(
+          function: () {
+            ref.read(repeatModeProvider.notifier).toggle();
+          },
+          icon: repeatMode == LoopMode.one
+              ? LucideIcons.repeat1
+              : LucideIcons.repeat,
+          color: repeatMode == LoopMode.off ? cs.foreground : cs.primary,
+          size: AppIconSize.sm,
         ),
       ],
     );
@@ -200,8 +184,7 @@ class _PlayingState extends ConsumerState<Playing>
       if (prev?.id != next?.id) _imageAnimationController.reset();
     });
 
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
+    final theme = ShadTheme.of(context);
 
     return Scaffold(
       body: SafeArea(
@@ -217,8 +200,8 @@ class _PlayingState extends ConsumerState<Playing>
                   ? Center(
                       child: Text(
                         'No song is playing',
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          color: tokens.textMuted,
+                        style: theme.textTheme.p.copyWith(
+                          color: theme.colorScheme.mutedForeground,
                         ),
                       ),
                     )
@@ -260,7 +243,7 @@ class _PlayingState extends ConsumerState<Playing>
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.headlineSmall?.copyWith(
+                                style: theme.textTheme.h3.copyWith(
                                   fontWeight: AppFont.regular,
                                 ),
                               ),
@@ -270,8 +253,8 @@ class _PlayingState extends ConsumerState<Playing>
                                 textAlign: TextAlign.center,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.textTheme.titleMedium?.copyWith(
-                                  color: tokens.textMuted,
+                                style: theme.textTheme.large.copyWith(
+                                  color: theme.colorScheme.mutedForeground,
                                   fontWeight: AppFont.regular,
                                 ),
                               ),

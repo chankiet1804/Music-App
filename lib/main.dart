@@ -7,8 +7,8 @@ import 'package:music_app/app.dart';
 import 'package:music_app/firebase_options.dart';
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Must run before any binding is created, since it installs its own binding.
   DevicePreview.enable(enabled: kDebugMode);
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const ProviderScope(child: MysicApp()));
 }

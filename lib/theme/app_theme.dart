@@ -2,81 +2,74 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:music_app/theme/app_colors.dart';
 import 'package:music_app/theme/app_dimens.dart';
-import 'package:music_app/theme/app_tokens.dart';
 import 'package:music_app/theme/app_typography.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 abstract final class AppTheme {
-  static final ThemeData dark = _build();
+  static const ShadColorScheme _colorScheme = ShadColorScheme(
+    background: AppColors.background,
+    foreground: AppColors.textPrimary,
+    card: AppColors.surface,
+    cardForeground: AppColors.textPrimary,
+    popover: AppColors.surfaceElevated,
+    popoverForeground: AppColors.textPrimary,
+    primary: AppColors.primary,
+    primaryForeground: AppColors.onPrimary,
+    secondary: AppColors.surfaceElevated,
+    secondaryForeground: AppColors.textPrimary,
+    muted: AppColors.surfaceElevated,
+    mutedForeground: AppColors.textMuted,
+    accent: AppColors.surfaceElevated,
+    accentForeground: AppColors.textPrimary,
+    destructive: AppColors.destructive,
+    destructiveForeground: AppColors.textPrimary,
+    border: AppColors.divider,
+    input: AppColors.divider,
+    ring: AppColors.primary,
+    selection: AppColors.selection,
+    custom: {
+      AppShadColors._textSecondary: AppColors.textSecondary,
+      AppShadColors._barBorder: AppColors.barBorder,
+    },
+  );
 
-  static ThemeData _build() {
-    const cs = ColorScheme.dark(
-      primary: AppColors.primary,
-      onPrimary: AppColors.onPrimary,
-      secondary: AppColors.primary,
-      onSecondary: AppColors.onPrimary,
-      surface: AppColors.background,
-      onSurface: AppColors.textPrimary,
-      surfaceContainer: AppColors.surface,
-      surfaceContainerHigh: AppColors.surfaceElevated,
-      onSurfaceVariant: AppColors.textSecondary,
-      outlineVariant: AppColors.divider,
-    );
+  static final ShadThemeData dark = ShadThemeData(
+    brightness: Brightness.dark,
+    colorScheme: _colorScheme,
+    textTheme: AppTypography.shadTextTheme(_colorScheme),
+    radius: BorderRadius.circular(AppRadius.xs),
+  );
 
-    final textTheme = AppTypography.textTheme(cs);
+  /// Material and Cupertino widgets still in use (Scaffold, progress
+  /// indicators, the Cupertino nav bar) read this, derived from [dark].
+  static ThemeData materialTheme(BuildContext context, ThemeData theme) {
+    final cs = ShadTheme.of(context).colorScheme;
 
-    return ThemeData(
-      useMaterial3: true,
-      colorScheme: cs,
-      fontFamily: AppFont.family,
-      // Scaffold would otherwise use cs.surfaceContainer and sit 2pts off the
-      // canvas colour, which is visible where Scaffold nests in Cupertino.
-      scaffoldBackgroundColor: AppColors.background,
-      textTheme: textTheme,
-      iconTheme: const IconThemeData(
-        color: AppColors.textPrimary,
-        size: AppIconSize.sm,
+    return theme.copyWith(
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: cs.primary,
+        linearTrackColor: cs.border,
       ),
-      dividerTheme: const DividerThemeData(
-        color: AppColors.divider,
-        thickness: AppBorders.hairline,
-        space: AppBorders.hairline,
-        indent: AppSpacing.xl,
-        endIndent: AppSpacing.xl,
-      ),
-      listTileTheme: ListTileThemeData(
-        contentPadding: const EdgeInsets.only(
-          left: AppSpacing.xl,
-          right: AppSpacing.lg,
-        ),
-        titleTextStyle: textTheme.titleSmall,
-        subtitleTextStyle: textTheme.bodySmall,
-        textColor: AppColors.textPrimary,
-        iconColor: AppColors.textMuted,
-      ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(
-        color: AppColors.primary,
-        linearTrackColor: AppColors.divider,
-      ),
-      textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
-          textStyle: textTheme.labelLarge,
-        ),
-      ),
-      iconButtonTheme: IconButtonThemeData(
-        style: IconButton.styleFrom(foregroundColor: AppColors.textPrimary),
-      ),
-      extensions: const <ThemeExtension<dynamic>>[AppTokens.dark],
+      iconTheme: IconThemeData(color: cs.foreground, size: AppIconSize.sm),
       // Cupertino widgets ignore ThemeData; this override is what colours
-      // CupertinoPageScaffold, CupertinoNavigationBar and CupertinoTabBar.
+      // CupertinoPageScaffold and CupertinoNavigationBar.
       cupertinoOverrideTheme: NoDefaultCupertinoThemeData(
         brightness: Brightness.dark,
-        primaryColor: AppColors.primary,
-        primaryContrastingColor: AppColors.onPrimary,
-        barBackgroundColor: AppColors.surface,
-        scaffoldBackgroundColor: AppColors.background,
+        primaryColor: cs.primary,
+        primaryContrastingColor: cs.primaryForeground,
+        barBackgroundColor: cs.card,
+        scaffoldBackgroundColor: cs.background,
         textTheme: AppTypography.cupertinoTextTheme(cs),
       ),
     );
   }
+}
+
+/// Palette entries Shad has no slot for, stored in [ShadColorScheme.custom].
+extension AppShadColors on ShadColorScheme {
+  static const String _textSecondary = 'textSecondary';
+  static const String _barBorder = 'barBorder';
+
+  Color get textSecondary => custom[_textSecondary]!;
+  Color get barBorder => custom[_barBorder]!;
 }

@@ -1,44 +1,36 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/widgets.dart';
+import 'package:music_app/theme/theme.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
-class MediaButtonControl extends StatefulWidget {
+class MediaButtonControl extends StatelessWidget {
   const MediaButtonControl({
     super.key,
     required this.function,
-    this.icon,
-    this.svgAsset,
+    required this.icon,
     required this.color,
     required this.size,
-  }) : assert(icon != null || svgAsset != null);
+  });
 
   final void Function()? function;
-  final IconData? icon;
-
-  /// Takes precedence over [icon] when set.
-  final String? svgAsset;
+  final IconData icon;
   final Color? color;
-  final double? size;
+  final double size;
 
-  @override
-  State<StatefulWidget> createState() => _MediaButtonControlState();
-}
-
-class _MediaButtonControlState extends State<MediaButtonControl> {
   @override
   Widget build(BuildContext context) {
-    final color = widget.color ?? Theme.of(context).colorScheme.primary;
-    final svgAsset = widget.svgAsset;
+    final color = this.color ?? ShadTheme.of(context).colorScheme.primary;
+    final extent = size + 2 * AppSpacing.sm;
 
-    return IconButton(
-      onPressed: widget.function,
-      icon: svgAsset != null
-          ? SvgPicture.asset(
-              svgAsset,
-              width: widget.size,
-              height: widget.size,
-              colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-            )
-          : Icon(widget.icon, color: color, size: widget.size),
+    return ShadIconButton.ghost(
+      onPressed: function,
+      width: extent,
+      height: extent,
+      padding: EdgeInsets.zero,
+      iconSize: size,
+      foregroundColor: color,
+      hoverForegroundColor: color,
+      pressedForegroundColor: color,
+      icon: Icon(icon, color: color, size: size),
     );
   }
 }
