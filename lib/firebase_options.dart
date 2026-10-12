@@ -56,13 +56,14 @@ class DefaultFirebaseOptions {
     projectId: 'music-app-9b65c',
     storageBucket: 'music-app-9b65c.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCz3H6AgKWlDBh9ousO7Q2OdY5lqO-_U68',
     appId: '1:538559689432:ios:09039fdc78400e2c391dad',
     messagingSenderId: '538559689432',
     projectId: 'music-app-9b65c',
     storageBucket: 'music-app-9b65c.firebasestorage.app',
+    androidClientId: '538559689432-anuesfs07vsk212k1t3a5q2mn0mucpja.apps.googleusercontent.com',
+    iosClientId: '538559689432-lmkev2ba2f8mdbpr9vb95lactrcvrtv8.apps.googleusercontent.com',
     iosBundleId: 'com.kiet.musicApp',
   );
 }

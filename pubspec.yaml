@@ -42,6 +42,7 @@ dependencies:
   audio_video_progress_bar: ^2.0.3
   flutter_riverpod: ^3.4.3
   firebase_core: ^4.15.0
+  firebase_auth: ^6.7.0
   shadcn_ui: ^0.57.1
 
 dev_dependencies:
