@@ -7,6 +7,7 @@ import 'package:music_app/core/player/player_providers.dart';
 import 'package:music_app/shared/widgets/media_button_control.dart';
 import 'package:music_app/shared/widgets/play_pause_button.dart';
 import 'package:music_app/theme/theme.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Persistent mini player shown above [AppBottomNavBar] while a song is
 /// loaded. Tapping it opens the full [Playing] screen; the transport buttons
@@ -19,8 +20,8 @@ class MiniPlayer extends ConsumerWidget {
     final song = ref.watch(playerControllerProvider);
     if (song == null) return const SizedBox.shrink();
 
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
+    final theme = ShadTheme.of(context);
+    final cs = theme.colorScheme;
 
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -33,7 +34,7 @@ class MiniPlayer extends ConsumerWidget {
             height: 62,
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
             decoration: BoxDecoration(
-              color: tokens.surfaceElevated.withValues(alpha: 0.6),
+              color: cs.muted.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(AppRadius.md),
               border: Border.all(
                 color: Colors.white.withValues(alpha: 0.12),
@@ -53,15 +54,13 @@ class MiniPlayer extends ConsumerWidget {
                         song.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium,
+                        style: theme.textTheme.large,
                       ),
                       Text(
                         song.artist,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: tokens.textMuted,
-                        ),
+                        style: theme.textTheme.muted,
                       ),
                     ],
                   ),
@@ -70,8 +69,8 @@ class MiniPlayer extends ConsumerWidget {
                   function: () {
                     ref.read(playerControllerProvider.notifier).prev();
                   },
-                  icon: Icons.skip_previous,
-                  color: theme.colorScheme.onSurface,
+                  icon: LucideIcons.skipBack,
+                  color: cs.foreground,
                   size: AppIconSize.sm,
                 ),
                 const PlayPauseButton(size: AppIconSize.md),
@@ -79,8 +78,8 @@ class MiniPlayer extends ConsumerWidget {
                   function: () {
                     ref.read(playerControllerProvider.notifier).next();
                   },
-                  icon: Icons.skip_next,
-                  color: theme.colorScheme.onSurface,
+                  icon: LucideIcons.skipForward,
+                  color: cs.foreground,
                   size: AppIconSize.sm,
                 ),
               ],

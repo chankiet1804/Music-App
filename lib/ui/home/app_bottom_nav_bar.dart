@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:music_app/theme/theme.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Bottom nav matching the Figma design: floating, rounded top corners and a
 /// soft upward shadow. Replaces CupertinoTabBar, which exposes no decoration.
@@ -17,19 +18,18 @@ class AppBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
+    final cs = ShadTheme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).padding.bottom;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppNavBar.inset),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainer,
+          color: cs.card,
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(AppRadius.full),
           ),
-          boxShadow: [tokens.navBarShadow],
+          boxShadow: const [AppShadows.navBar],
         ),
         child: SizedBox(
           height: AppNavBar.height,
@@ -65,9 +65,9 @@ class _NavBarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final tokens = AppTokens.of(context);
-    final color = selected ? theme.colorScheme.primary : tokens.navInactive;
+    final theme = ShadTheme.of(context);
+    final cs = theme.colorScheme;
+    final color = selected ? cs.primary : cs.mutedForeground;
     final label = item.label;
 
     return Expanded(
@@ -87,7 +87,7 @@ class _NavBarItem extends StatelessWidget {
               const SizedBox(height: AppSpacing.xs),
               Text(
                 label,
-                style: theme.textTheme.labelSmall?.copyWith(color: color),
+                style: theme.textTheme.caption.copyWith(color: color),
               ),
             ],
           ],
