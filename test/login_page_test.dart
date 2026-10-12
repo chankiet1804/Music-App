@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:music_app/core/auth/auth_providers.dart';
 import 'package:music_app/data/model/auth_failure.dart';
 import 'package:music_app/ui/login/login.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'fakes/fake_auth_service.dart';
 
@@ -23,7 +24,7 @@ Future<FakeAuthService> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [authServiceProvider.overrideWithValue(service)],
-      child: const MaterialApp(home: LoginPage()),
+      child: const ShadApp(home: LoginPage()),
     ),
   );
   return service;

@@ -3,8 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_app/core/auth/auth_controller.dart';
 import 'package:music_app/data/model/auth_failure.dart';
 import 'package:music_app/theme/theme.dart';
-import 'package:music_app/ui/login/forgot_password_dialog.dart';
+import 'package:music_app/ui/login/forgot_password_sheet.dart';
 import 'package:music_app/ui/login/validators.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Sign in and sign up on one screen. On success the router redirects away,
 /// so this page never navigates by itself.
@@ -16,7 +17,7 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  var _formKey = GlobalKey<FormState>();
+  var _formKey = GlobalKey<ShadFormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
   final _confirm = TextEditingController();
@@ -35,15 +36,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     _confirm.clear();
     setState(() {
       _isSignUp = !_isSignUp;
-      // New key rebuilds the Form to drop stale errors; text lives in the
-      // controllers so it survives. FormState.reset() would revert it.
-      _formKey = GlobalKey<FormState>();
+      // New key rebuilds the form to drop stale errors; text lives in the
+      // controllers so it survives. Resetting the form would revert it.
+      _formKey = GlobalKey<ShadFormState>();
     });
   }
 
   Future<void> _submit() async {
     FocusScope.of(context).unfocus();
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.saveAndValidate()) return;
     final controller = ref.read(authControllerProvider.notifier);
     if (_isSignUp) {
       await controller.signUp(_email.text, _password.text);
@@ -60,13 +61,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final message = error is AuthFailure
           ? error.message
           : const AuthFailure('unknown').message;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(SnackBar(content: Text(message)));
+      ShadToaster.of(context)
+        ..hide()
+        ..show(ShadToast.destructive(description: Text(message)));
     });
 
     final isLoading = ref.watch(authControllerProvider).isLoading;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = ShadTheme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       body: SafeArea(
@@ -75,7 +77,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             horizontal: AppSpacing.screenH,
             vertical: AppSpacing.xxl,
           ),
-          child: Form(
+          child: ShadForm(
             key: _formKey,
             child: AutofillGroup(
               child: Column(
@@ -89,30 +91,36 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  Text('Mysic App', style: textTheme.headlineMedium),
+                  Text('Mysic App', style: textTheme.h3),
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     _isSignUp
                         ? 'Create an account to start listening'
                         : 'Sign in to continue listening',
-                    style: textTheme.bodySmall,
+                    style: textTheme.muted,
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: AppSpacing.xxl),
-                  TextFormField(
+                  ShadInputFormField(
                     key: const Key('login.email'),
+                    id: 'email',
                     controller: _email,
+                    placeholder: const Text('Email'),
+                    leading: const Icon(LucideIcons.mail, size: 16),
                     keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     autofillHints: const [AutofillHints.email],
-                    decoration: _decoration(context, 'Email'),
                     validator: validateEmail,
                   ),
                   const SizedBox(height: AppSpacing.lg),
-                  TextFormField(
+                  ShadInputFormField(
                     key: const Key('login.password'),
+                    id: 'password',
                     controller: _password,
+                    placeholder: const Text('Password'),
                     obscureText: _obscure,
+                    leading: const Icon(LucideIcons.lock, size: 16),
+                    trailing: _obscureToggle(),
                     textInputAction: _isSignUp
                         ? TextInputAction.next
                         : TextInputAction.done,
@@ -121,38 +129,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                           ? AutofillHints.newPassword
                           : AutofillHints.password,
                     ],
-                    decoration: _decoration(context, 'Password').copyWith(
-                      suffixIcon: IconButton(
-                        tooltip: _obscure ? 'Show password' : 'Hide password',
-                        icon: Icon(
-                          _obscure ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
-                      ),
-                    ),
                     validator: validatePassword,
-                    onFieldSubmitted: _isSignUp ? null : (_) => _submit(),
+                    onSubmitted: _isSignUp ? null : (_) => _submit(),
                   ),
                   if (_isSignUp) ...[
                     const SizedBox(height: AppSpacing.lg),
-                    TextFormField(
+                    ShadInputFormField(
                       key: const Key('login.confirm'),
+                      id: 'confirm',
                       controller: _confirm,
+                      placeholder: const Text('Confirm password'),
                       obscureText: _obscure,
+                      leading: const Icon(LucideIcons.lock, size: 16),
                       textInputAction: TextInputAction.done,
-                      decoration: _decoration(context, 'Confirm password'),
                       validator: (value) =>
                           validateConfirmPassword(value, _password.text),
-                      onFieldSubmitted: (_) => _submit(),
+                      onSubmitted: (_) => _submit(),
                     ),
                   ],
                   if (!_isSignUp)
                     Align(
                       alignment: Alignment.centerRight,
-                      child: TextButton(
+                      child: ShadButton.link(
                         onPressed: isLoading
                             ? null
-                            : () => ForgotPasswordDialog.show(
+                            : () => ForgotPasswordSheet.show(
                                 context,
                                 initialEmail: _email.text.trim(),
                               ),
@@ -162,44 +163,43 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   else
                     const SizedBox(height: AppSpacing.lg),
                   const SizedBox(height: AppSpacing.sm),
-                  SizedBox(
+                  ShadButton(
+                    key: const Key('login.submit'),
                     width: double.infinity,
-                    child: FilledButton(
-                      key: const Key('login.submit'),
-                      onPressed: isLoading ? null : _submit,
-                      child: isLoading
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(_isSignUp ? 'Create account' : 'Sign in'),
-                    ),
+                    onPressed: isLoading ? null : _submit,
+                    leading: isLoading
+                        ? SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: theme.colorScheme.primaryForeground,
+                            ),
+                          )
+                        : null,
+                    child: Text(_isSignUp ? 'Create account' : 'Sign in'),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Row(
                     children: [
-                      const Expanded(child: Divider(indent: 0, endIndent: 0)),
+                      const Expanded(child: ShadSeparator.horizontal()),
                       Padding(
                         padding: const EdgeInsets.symmetric(
                           horizontal: AppSpacing.md,
                         ),
-                        child: Text('or', style: textTheme.bodySmall),
+                        child: Text('or', style: textTheme.muted),
                       ),
-                      const Expanded(child: Divider(indent: 0, endIndent: 0)),
+                      const Expanded(child: ShadSeparator.horizontal()),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.xl),
-                  SizedBox(
+                  ShadButton.outline(
                     width: double.infinity,
-                    child: OutlinedButton.icon(
-                      // TODO: implement Google sign-in
-                      onPressed: () => ScaffoldMessenger.of(context)
-                          .showSnackBar(
-                            const SnackBar(content: Text('Coming soon')),
-                          ),
-                      icon: const Icon(Icons.login),
-                      label: const Text('Continue with Google'),
+                    // TODO: implement Google sign-in
+                    onPressed: () => ShadToaster.of(context).show(
+                      const ShadToast(description: Text('Coming soon')),
                     ),
+                    leading: const Icon(LucideIcons.logIn, size: 16),
+                    child: const Text('Continue with Google'),
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   Row(
@@ -209,9 +209,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                         _isSignUp
                             ? 'Already have an account?'
                             : "Don't have an account?",
-                        style: textTheme.bodySmall,
+                        style: textTheme.muted,
                       ),
-                      TextButton(
+                      ShadButton.link(
                         key: const Key('login.toggle'),
                         onPressed: isLoading ? null : _toggleMode,
                         child: Text(_isSignUp ? 'Sign in' : 'Sign up'),
@@ -227,15 +227,18 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  InputDecoration _decoration(BuildContext context, String label) {
-    final tokens = AppTokens.of(context);
-    return InputDecoration(
-      labelText: label,
-      filled: true,
-      fillColor: tokens.surfaceElevated,
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        borderSide: BorderSide.none,
+  Widget _obscureToggle() {
+    return SizedBox.square(
+      dimension: 24,
+      child: OverflowBox(
+        maxWidth: 28,
+        maxHeight: 28,
+        child: ShadIconButton.ghost(
+          iconSize: 18,
+          padding: const EdgeInsets.all(2),
+          icon: Icon(_obscure ? LucideIcons.eyeOff : LucideIcons.eye),
+          onPressed: () => setState(() => _obscure = !_obscure),
+        ),
       ),
     );
   }
