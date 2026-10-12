@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:music_app/core/player/player_providers.dart';
 import 'package:music_app/shared/widgets/media_button_control.dart';
 import 'package:music_app/theme/theme.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Play/pause/replay button driven by [playerStateProvider]. Shared between
 /// the full [Playing] screen and the mini player, sized via [size].
@@ -47,14 +47,14 @@ class PlayPauseButton extends ConsumerWidget {
     } else if (playing != true) {
       return MediaButtonControl(
         function: controller.play,
-        icon: Icons.play_arrow,
+        icon: LucideIcons.play,
         size: size,
         color: null,
       );
     } else if (processingState != ProcessingState.completed) {
       return MediaButtonControl(
         function: controller.pause,
-        icon: Icons.pause,
+        icon: LucideIcons.pause,
         size: size,
         color: null,
       );
@@ -64,7 +64,7 @@ class PlayPauseButton extends ConsumerWidget {
           controller.seek(Duration.zero);
           onReplay?.call();
         },
-        icon: Icons.replay,
+        icon: LucideIcons.rotateCcw,
         size: size,
         color: null,
       );
@@ -77,7 +77,7 @@ class PlayPauseButton extends ConsumerWidget {
     bool? playing,
     PlayerController controller,
   ) {
-    final cs = Theme.of(context).colorScheme;
+    final cs = ShadTheme.of(context).colorScheme;
 
     final Widget child;
     final VoidCallback? onTap;
@@ -87,53 +87,43 @@ class PlayPauseButton extends ConsumerWidget {
       child = SizedBox(
         width: size,
         height: size,
-        child: CircularProgressIndicator(strokeWidth: 2, color: cs.onPrimary),
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: cs.primaryForeground,
+        ),
       );
     } else if (playing != true) {
       onTap = controller.play;
-      child = Icon(
-        Icons.play_arrow_rounded,
-        color: cs.onPrimary,
-        size: size * 1.5,
-      );
+      child = Icon(LucideIcons.play, size: size * 1.25);
     } else if (processingState != ProcessingState.completed) {
       onTap = controller.pause;
-      child = SvgPicture.asset(
-        AppIcons.pause,
-        height: size * 1.125,
-        colorFilter: ColorFilter.mode(cs.onPrimary, BlendMode.srcIn),
-      );
+      child = Icon(LucideIcons.pause, size: size * 1.25);
     } else {
       onTap = () {
         controller.seek(Duration.zero);
         onReplay?.call();
       };
-      child = Icon(
-        Icons.replay_rounded,
-        color: cs.onPrimary,
-        size: size * 1.5,
-      );
+      child = Icon(LucideIcons.rotateCcw, size: size * 1.25);
     }
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(color: cs.primary.withValues(alpha: 0.35), blurRadius: 47),
-        ],
-      ),
-      child: Material(
-        color: cs.primary,
-        shape: const CircleBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox.square(
-            dimension: _filledDiameter,
-            child: Center(child: child),
-          ),
+    return ShadIconButton(
+      onPressed: onTap,
+      width: _filledDiameter,
+      height: _filledDiameter,
+      padding: EdgeInsets.zero,
+      backgroundColor: cs.primary,
+      hoverBackgroundColor: cs.primary,
+      foregroundColor: cs.primaryForeground,
+      hoverForegroundColor: cs.primaryForeground,
+      decoration: const ShadDecoration(
+        border: ShadBorder(
+          radius: BorderRadius.all(Radius.circular(_filledDiameter / 2)),
         ),
       ),
+      shadows: [
+        BoxShadow(color: cs.primary.withValues(alpha: 0.35), blurRadius: 47),
+      ],
+      icon: child,
     );
   }
 }

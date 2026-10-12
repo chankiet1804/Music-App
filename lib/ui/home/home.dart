@@ -3,7 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:music_app/core/player/player_providers.dart';
 import 'package:music_app/data/providers.dart';
+import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/home/song_item.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class HomeTabPage extends ConsumerWidget {
   const HomeTabPage({super.key});
@@ -21,9 +23,9 @@ class HomeTabPage extends ConsumerWidget {
             children: [
               Text(
                 'Failed to load songs',
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: ShadTheme.of(context).textTheme.p,
               ),
-              TextButton(
+              ShadButton.ghost(
                 onPressed: () => ref.invalidate(songsProvider),
                 child: const Text('Retry'),
               ),
@@ -45,7 +47,9 @@ class HomeTabPage extends ConsumerWidget {
               },
             );
           },
-          separatorBuilder: (context, index) => const Divider(),
+          separatorBuilder: (context, index) => const ShadSeparator.horizontal(
+            margin: EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+          ),
         ),
       ),
     );

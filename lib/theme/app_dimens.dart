@@ -1,5 +1,8 @@
+import 'package:flutter/painting.dart';
+import 'package:music_app/theme/app_colors.dart';
+
 /// Dimension scales. Theme-invariant, so they are plain constants rather than
-/// ThemeExtension fields - this keeps every call site const.
+/// theme fields - this keeps every call site const.
 abstract final class AppSpacing {
   static const double xs = 4;
   static const double sm = 8;
@@ -39,4 +42,12 @@ abstract final class AppNavBar {
 abstract final class AppBorders {
   static const double hairline = 1.0;
   static const double progressBar = 3.0;
+}
+
+abstract final class AppShadows {
+  static const BoxShadow navBar = BoxShadow(
+    color: AppColors.navShadow,
+    offset: Offset(0, -5),
+    blurRadius: 20,
+  );
 }

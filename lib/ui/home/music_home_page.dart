@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/home/app_bottom_nav_bar.dart';
 import 'package:music_app/ui/home/mini_player.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class MusicHomePage extends StatelessWidget {
   const MusicHomePage({super.key, required this.navigationShell});
@@ -10,21 +11,21 @@ class MusicHomePage extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
   static const List<BottomNavigationBarItem> _navItems = [
-    BottomNavigationBarItem(icon: Icon(CupertinoIcons.house, size: 24)),
-    BottomNavigationBarItem(icon: Icon(CupertinoIcons.music_note_2, size: 24)),
-    BottomNavigationBarItem(icon: Icon(CupertinoIcons.heart, size: 24)),
-    BottomNavigationBarItem(icon: Icon(CupertinoIcons.person, size: 24)),
+    BottomNavigationBarItem(icon: Icon(LucideIcons.house, size: 24)),
+    BottomNavigationBarItem(icon: Icon(LucideIcons.music2, size: 24)),
+    BottomNavigationBarItem(icon: Icon(LucideIcons.heart, size: 24)),
+    BottomNavigationBarItem(icon: Icon(LucideIcons.user, size: 24)),
   ];
 
   @override
   Widget build(BuildContext context) {
-    final tokens = AppTokens.of(context);
+    final cs = ShadTheme.of(context).colorScheme;
     final currentIndex = navigationShell.currentIndex;
 
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
         middle: const Text('Mysic App'),
-        border: Border(bottom: BorderSide(color: tokens.barBorder, width: 0.0)),
+        border: Border(bottom: BorderSide(color: cs.barBorder, width: 0.0)),
       ),
       child: Column(
         children: [
