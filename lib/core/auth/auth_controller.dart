@@ -14,15 +14,24 @@ final authControllerProvider = AsyncNotifierProvider<AuthController, void>(
 class AuthController extends AsyncNotifier<void> {
   AuthService get _service => ref.read(authServiceProvider);
 
+  // TODO: remove. Holds the loading state so the login starfield boost can
+  // be checked; it must run before the service call because the router
+  // leaves the page as soon as Firebase reports the user.
+  static const _testDelay = Duration(seconds: 2);
+
   // Sync so the initial state is AsyncData, not a first-frame AsyncLoading.
   @override
   FutureOr<void> build() {}
 
-  Future<void> signIn(String email, String password) =>
-      _run(() => _service.signIn(email: email, password: password));
+  Future<void> signIn(String email, String password) => _run(() async {
+    await Future<void>.delayed(_testDelay);
+    await _service.signIn(email: email, password: password);
+  });
 
-  Future<void> signUp(String email, String password) =>
-      _run(() => _service.signUp(email: email, password: password));
+  Future<void> signUp(String email, String password) => _run(() async {
+    await Future<void>.delayed(_testDelay);
+    await _service.signUp(email: email, password: password);
+  });
 
   Future<void> resetPassword(String email) =>
       _run(() => _service.sendPasswordResetEmail(email));

@@ -100,6 +100,7 @@ flutter:
   assets:
     - assets/songs.json
     - assets/ITunes_logo.png
+    - assets/app_logo.png
 
   fonts:
     - family: Nunito

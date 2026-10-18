@@ -21,6 +21,10 @@ Future<FakeAuthService> _pump(WidgetTester tester) async {
   tester.view.physicalSize = const Size(800, 1600);
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
+  // Keeps the endless starfield still so pumpAndSettle can settle.
+  tester.platformDispatcher.accessibilityFeaturesTestValue =
+      const FakeAccessibilityFeatures(disableAnimations: true);
+  addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [authServiceProvider.overrideWithValue(service)],
@@ -118,6 +122,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Incorrect email or password.'), findsOneWidget);
+  });
+
+  testWidgets('hides brand instead of scaling it to zero when keyboard is up', (
+    tester,
+  ) async {
+    await _pump(tester);
+    expect(find.text('Mysic App'), findsOneWidget);
+
+    // Leaves less room than the sheet needs, as on a phone with the keyboard.
+    tester.view.viewInsets = const FakeViewPadding(bottom: 1200);
+    addTearDown(tester.view.resetViewInsets);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Mysic App'), findsNothing);
+    expect(find.byKey(_email), findsOneWidget);
   });
 
   testWidgets('forgot password sends reset email', (tester) async {
