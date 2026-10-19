@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -56,13 +53,23 @@ class DefaultFirebaseOptions {
     projectId: 'music-app-9b65c',
     storageBucket: 'music-app-9b65c.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCz3H6AgKWlDBh9ousO7Q2OdY5lqO-_U68',
     appId: '1:538559689432:ios:09039fdc78400e2c391dad',
     messagingSenderId: '538559689432',
     projectId: 'music-app-9b65c',
     storageBucket: 'music-app-9b65c.firebasestorage.app',
+    androidClientId: '538559689432-anuesfs07vsk212k1t3a5q2mn0mucpja.apps.googleusercontent.com',
+    iosClientId: '538559689432-lmkev2ba2f8mdbpr9vb95lactrcvrtv8.apps.googleusercontent.com',
     iosBundleId: 'com.kiet.musicApp',
+  );
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyB4px3s0aQv-LXJ4At53bUeihY7Znh7yPY',
+    appId: '1:538559689432:web:0d3394380d03fcb4391dad',
+    messagingSenderId: '538559689432',
+    projectId: 'music-app-9b65c',
+    authDomain: 'music-app-9b65c.firebaseapp.com',
+    storageBucket: 'music-app-9b65c.firebasestorage.app',
+    measurementId: 'G-36V4K6FJ5L',
   );
 }
