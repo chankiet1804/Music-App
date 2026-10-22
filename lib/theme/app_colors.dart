@@ -20,6 +20,11 @@ abstract final class AppColors {
   /// Not from Figma: shadcn dark default, needed by the Shad color scheme.
   static const Color destructive = Color(0xFFEF4444);
 
+  /// Not from Figma: toast status accents.
+  static const Color success = Color(0xFF34D27B);
+  static const Color info = Color(0xFF2FA8FF);
+  static const Color warning = Color(0xFFFFB23E);
+
   // Derived. Alpha is pre-computed so these stay const.
   static const Color divider = Color(0x338E8E8E); // textMuted @ 20%
   static const Color barBorder = Color(0x1F8E8E8E); // textMuted @ 12%

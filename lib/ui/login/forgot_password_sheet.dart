@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_app/core/auth/auth_controller.dart';
+import 'package:music_app/shared/widgets/toast/app_toast.dart';
 import 'package:music_app/ui/login/validators.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -41,15 +42,10 @@ class _ForgotPasswordSheetState extends ConsumerState<ForgotPasswordSheet> {
     final controller = ref.read(authControllerProvider.notifier);
     await controller.resetPassword(_email.text);
     if (!mounted || ref.read(authControllerProvider).hasError) return;
-    final toaster = ShadToaster.of(context);
     Navigator.of(context).pop();
     // Neutral wording: the response never reveals whether the email exists.
-    toaster.show(
-      const ShadToast(
-        description: Text(
-          'If an account exists for that email, a reset link has been sent.',
-        ),
-      ),
+    AppToast.success(
+      'If an account exists for that email, a reset link has been sent.',
     );
   }
 

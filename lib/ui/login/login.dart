@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:music_app/core/auth/auth_controller.dart';
 import 'package:music_app/data/model/auth_failure.dart';
+import 'package:music_app/shared/widgets/toast/app_toast.dart';
 import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/login/forgot_password_sheet.dart';
 import 'package:music_app/ui/login/loading_button.dart';
@@ -70,9 +71,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       final message = error is AuthFailure
           ? error.message
           : const AuthFailure('unknown').message;
-      ShadToaster.of(context)
-        ..hide()
-        ..show(ShadToast.destructive(description: Text(message)));
+      AppToast.dismissAll();
+      AppToast.error(message);
     });
 
     final isLoading = ref.watch(authControllerProvider).isLoading;
@@ -306,9 +306,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ShadButton.outline(
               width: double.infinity,
               // TODO: implement Google sign-in
-              onPressed: () =>
-                  ShadToaster.of(context)
-                      .show(const ShadToast(description: Text('Coming soon'))),
+              onPressed: () => AppToast.info('Coming soon'),
               leading: const Icon(LucideIcons.logIn, size: 16),
               child: const Text('Continue with Google'),
             ),

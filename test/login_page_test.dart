@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:music_app/core/auth/auth_providers.dart';
 import 'package:music_app/data/model/auth_failure.dart';
+import 'package:music_app/shared/widgets/toast/app_toaster.dart';
+import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/login/login.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
@@ -28,7 +30,11 @@ Future<FakeAuthService> _pump(WidgetTester tester) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [authServiceProvider.overrideWithValue(service)],
-      child: const ShadApp(home: LoginPage()),
+      child: ShadApp(
+        theme: AppTheme.dark,
+        home: const LoginPage(),
+        builder: (context, child) => AppToaster(child: child!),
+      ),
     ),
   );
   return service;

@@ -30,6 +30,9 @@ abstract final class AppTheme {
     custom: {
       AppShadColors._textSecondary: AppColors.textSecondary,
       AppShadColors._barBorder: AppColors.barBorder,
+      AppShadColors._success: AppColors.success,
+      AppShadColors._info: AppColors.info,
+      AppShadColors._warning: AppColors.warning,
     },
   );
 
@@ -69,7 +72,13 @@ abstract final class AppTheme {
 extension AppShadColors on ShadColorScheme {
   static const String _textSecondary = 'textSecondary';
   static const String _barBorder = 'barBorder';
+  static const String _success = 'success';
+  static const String _info = 'info';
+  static const String _warning = 'warning';
 
   Color get textSecondary => custom[_textSecondary]!;
   Color get barBorder => custom[_barBorder]!;
+  Color get success => custom[_success]!;
+  Color get info => custom[_info]!;
+  Color get warning => custom[_warning]!;
 }
