@@ -33,6 +33,7 @@ abstract final class AppTheme {
       AppShadColors._success: AppColors.success,
       AppShadColors._info: AppColors.info,
       AppShadColors._warning: AppColors.warning,
+      AppShadColors._brandPink: AppColors.brandPink,
     },
   );
 
@@ -75,10 +76,12 @@ extension AppShadColors on ShadColorScheme {
   static const String _success = 'success';
   static const String _info = 'info';
   static const String _warning = 'warning';
+  static const String _brandPink = 'brandPink';
 
   Color get textSecondary => custom[_textSecondary]!;
   Color get barBorder => custom[_barBorder]!;
   Color get success => custom[_success]!;
   Color get info => custom[_info]!;
   Color get warning => custom[_warning]!;
+  Color get brandPink => custom[_brandPink]!;
 }

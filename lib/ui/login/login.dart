@@ -8,13 +8,15 @@ import 'package:music_app/shared/widgets/toast/app_toast.dart';
 import 'package:music_app/theme/theme.dart';
 import 'package:music_app/ui/login/forgot_password_sheet.dart';
 import 'package:music_app/ui/login/loading_button.dart';
+import 'package:music_app/ui/login/pill_input.dart';
 import 'package:music_app/ui/login/starfield_background.dart';
 import 'package:music_app/ui/login/validators.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
-/// Sign in and sign up on one screen: open sky with the brand on top, form
-/// in a frosted sheet below. On success the router redirects away, so this
-/// page never navigates by itself.
+/// Sign in and sign up on one screen, laid out after Native Bloom's "Clover
+/// sign in": brand on top, fields in the middle, actions pinned to the
+/// bottom, all directly on the sky. On success the router redirects away, so
+/// this page never navigates by itself.
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
 
@@ -23,9 +25,6 @@ class LoginPage extends ConsumerStatefulWidget {
 }
 
 class _LoginPageState extends ConsumerState<LoginPage> {
-  static const _sheetRadius = BorderRadius.vertical(
-    top: Radius.circular(AppRadius.xxl),
-  );
   static const _liftOff = Duration(milliseconds: 600);
   var _formKey = GlobalKey<ShadFormState>();
   final _email = TextEditingController();
@@ -79,6 +78,9 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final theme = ShadTheme.of(context);
     final cs = theme.colorScheme;
 
+    // Brand gives way to the fields while typing.
+    final keyboardUp = MediaQuery.viewInsetsOf(context).bottom > 0;
+
     // Starfield sits outside the Scaffold so the keyboard never resizes it.
     return Stack(
       children: [
@@ -94,51 +96,95 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             ),
           ),
         ),
+        Positioned.fill(child: _scrim(cs)),
         Scaffold(
           backgroundColor: Colors.transparent,
-          // Sky shrinks as the keyboard opens; scrolls once nothing is left.
-          body: CustomScrollView(
-            slivers: [
-              SliverFillRemaining(
-                hasScrollBody: false,
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: SafeArea(bottom: false, child: _sky(theme)),
-                    ),
-                    _reveal(2, _sheet(isLoading, theme), rise: 120),
-                  ],
+          body: SafeArea(
+            // Fills the screen to pin actions to the bottom; scrolls once the
+            // keyboard leaves too little room. No intrinsics: the shad inputs
+            // under-report their height.
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.screenH,
+                  AppSpacing.xl,
+                  AppSpacing.screenH,
+                  AppSpacing.lg,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight:
+                        (constraints.maxHeight - AppSpacing.xl - AppSpacing.lg)
+                            .clamp(0, double.infinity),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AnimatedSize(
+                            duration: const Duration(milliseconds: 250),
+                            curve: Curves.easeOutCubic,
+                            child: keyboardUp
+                                ? const SizedBox(width: double.infinity)
+                                : _brand(theme),
+                          ),
+                          _reveal(2, _fields(isLoading, theme)),
+                          const SizedBox(height: AppSpacing.xl),
+                        ],
+                      ),
+                      _reveal(3, _actions(isLoading, theme)),
+                    ],
+                  ),
                 ),
               ),
-            ],
+            ),
           ),
         ),
       ],
     );
   }
 
-  Widget _sky(ShadThemeData theme) {
-    final textTheme = theme.textTheme;
-
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xl),
-      child: Center(
-        child: FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _reveal(0, _logo(theme.colorScheme)),
-              const SizedBox(height: AppSpacing.xl),
-              _reveal(1, Text('Mysic App', style: textTheme.h2)),
-              const SizedBox(height: AppSpacing.sm),
-              _reveal(
-                1,
-                Text('Your music, your universe', style: textTheme.muted),
-              ),
+  /// Darkens the sky towards the bottom, where most of the content sits, so
+  /// stars never compete with text. Plain background colour, so it only ever
+  /// darkens, and two stops, since a mid stop shows up as a visible band.
+  Widget _scrim(ShadColorScheme cs) {
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: const Alignment(0, -0.3),
+            end: Alignment.bottomCenter,
+            colors: [
+              cs.background.withValues(alpha: 0),
+              cs.background.withValues(alpha: 0.8),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _brand(ShadThemeData theme) {
+    final textTheme = theme.textTheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(
+        top: AppSpacing.xl,
+        bottom: AppSpacing.huge,
+      ),
+      child: Column(
+        children: [
+          _reveal(0, _logo(theme.colorScheme)),
+          const SizedBox(height: AppSpacing.lg),
+          _reveal(1, Text('Mysic App', style: textTheme.h2)),
+          const SizedBox(height: AppSpacing.xs),
+          _reveal(1, Text('Your music, your universe', style: textTheme.muted)),
+        ],
       ),
     );
   }
@@ -161,175 +207,164 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     );
   }
 
-  /// Translucent sheet holding the form. Sinks and dims slightly while
-  /// signing in so the boosted starfield takes over. No backdrop blur: over
-  /// the constantly repainting starfield it smears into blotches.
-  Widget _sheet(bool isLoading, ShadThemeData theme) {
-    final cs = theme.colorScheme;
+  /// Heading and inputs. Rises slightly while signing in, a softer take on
+  /// Clover's lift-off. The form lives in here, below the entrance animation,
+  /// so the key swap on mode toggle does not replay it.
+  Widget _fields(bool isLoading, ShadThemeData theme) {
+    final textTheme = theme.textTheme;
+    final lockIcon = _obscure ? LucideIcons.lock : LucideIcons.lockOpen;
 
     return AnimatedSlide(
-      offset: isLoading ? const Offset(0, 0.05) : Offset.zero,
+      offset: isLoading ? const Offset(0, -0.04) : Offset.zero,
       duration: _liftOff,
       curve: Curves.easeInOut,
-      child: AnimatedOpacity(
-        opacity: isLoading ? 0.85 : 1,
-        duration: _liftOff,
-        curve: Curves.easeInOut,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: cs.secondary.withValues(alpha: 0.7),
-            borderRadius: _sheetRadius,
-            border: Border.all(color: cs.border),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.screenH,
-                AppSpacing.xl,
-                AppSpacing.screenH,
-                AppSpacing.lg,
+      child: ShadForm(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                _isSignUp ? 'Create your account' : 'Welcome back',
+                style: textTheme.h4,
               ),
-              child: _form(isLoading, theme),
-            ),
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                _isSignUp
+                    ? 'Create an account to start listening'
+                    : 'Sign in to continue listening',
+                style: textTheme.muted,
+              ),
+              const SizedBox(height: AppSpacing.xl),
+              PillInput(
+                key: const Key('login.email'),
+                id: 'email',
+                controller: _email,
+                placeholder: 'Email',
+                icon: LucideIcons.mail,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.email],
+                validator: validateEmail,
+              ),
+              const SizedBox(height: AppSpacing.lg),
+              PillInput(
+                key: const Key('login.password'),
+                id: 'password',
+                controller: _password,
+                placeholder: 'Password',
+                obscureText: _obscure,
+                revealed: !_obscure,
+                icon: lockIcon,
+                trailing: _obscureToggle(),
+                textInputAction: _isSignUp
+                    ? TextInputAction.next
+                    : TextInputAction.done,
+                autofillHints: [
+                  _isSignUp
+                      ? AutofillHints.newPassword
+                      : AutofillHints.password,
+                ],
+                validator: validatePassword,
+                onSubmitted: _isSignUp ? null : (_) => _submit(),
+              ),
+              if (_isSignUp) ...[
+                const SizedBox(height: AppSpacing.lg),
+                PillInput(
+                  key: const Key('login.confirm'),
+                  id: 'confirm',
+                  controller: _confirm,
+                  placeholder: 'Confirm password',
+                  obscureText: _obscure,
+                  revealed: !_obscure,
+                  icon: lockIcon,
+                  textInputAction: TextInputAction.done,
+                  validator: (value) =>
+                      validateConfirmPassword(value, _password.text),
+                  onSubmitted: (_) => _submit(),
+                ),
+              ],
+              if (!_isSignUp)
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ShadButton.link(
+                    onPressed: isLoading
+                        ? null
+                        : () => ForgotPasswordSheet.show(
+                            context,
+                            initialEmail: _email.text.trim(),
+                          ),
+                    child: const Text('Forgot password?'),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _form(bool isLoading, ShadThemeData theme) {
+  Widget _actions(bool isLoading, ShadThemeData theme) {
     final textTheme = theme.textTheme;
 
-    return ShadForm(
-      key: _formKey,
-      child: AutofillGroup(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        LoadingButton(
+          key: const Key('login.submit'),
+          width: double.infinity,
+          isLoading: isLoading,
+          onPressed: _submit,
+          loadingLabel: Text(
+            _isSignUp ? 'Creating account...' : 'Signing in...',
+          ),
+          child: Text(_isSignUp ? 'Create account' : 'Sign in'),
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        Row(
+          children: [
+            const Expanded(child: ShadSeparator.horizontal()),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+              child: Text('or', style: textTheme.muted),
+            ),
+            const Expanded(child: ShadSeparator.horizontal()),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        ShadButton.outline(
+          width: double.infinity,
+          height: 50,
+          backgroundColor: theme.colorScheme.secondary.withValues(alpha: 0.8),
+          decoration: const ShadDecoration(
+            border: ShadBorder(
+              radius: BorderRadius.all(Radius.circular(AppRadius.full)),
+            ),
+            secondaryFocusedBorder: ShadBorder(
+              radius: BorderRadius.all(Radius.circular(AppRadius.full + 2)),
+            ),
+          ),
+          // TODO: implement Google sign-in
+          onPressed: () => AppToast.info('Coming soon'),
+          leading: const Icon(LucideIcons.logIn, size: 16),
+          child: const Text('Continue with Google'),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              _isSignUp ? 'Create your account' : 'Welcome back',
-              style: textTheme.h4,
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            Text(
-              _isSignUp
-                  ? 'Create an account to start listening'
-                  : 'Sign in to continue listening',
+              _isSignUp ? 'Already have an account?' : "Don't have an account?",
               style: textTheme.muted,
             ),
-            const SizedBox(height: AppSpacing.xl),
-            ShadInputFormField(
-              key: const Key('login.email'),
-              id: 'email',
-              controller: _email,
-              placeholder: const Text('Email'),
-              leading: const Icon(LucideIcons.mail, size: 16),
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              autofillHints: const [AutofillHints.email],
-              validator: validateEmail,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ShadInputFormField(
-              key: const Key('login.password'),
-              id: 'password',
-              controller: _password,
-              placeholder: const Text('Password'),
-              obscureText: _obscure,
-              leading: const Icon(LucideIcons.lock, size: 16),
-              trailing: _obscureToggle(),
-              textInputAction: _isSignUp
-                  ? TextInputAction.next
-                  : TextInputAction.done,
-              autofillHints: [
-                _isSignUp ? AutofillHints.newPassword : AutofillHints.password,
-              ],
-              validator: validatePassword,
-              onSubmitted: _isSignUp ? null : (_) => _submit(),
-            ),
-            if (_isSignUp) ...[
-              const SizedBox(height: AppSpacing.lg),
-              ShadInputFormField(
-                key: const Key('login.confirm'),
-                id: 'confirm',
-                controller: _confirm,
-                placeholder: const Text('Confirm password'),
-                obscureText: _obscure,
-                leading: const Icon(LucideIcons.lock, size: 16),
-                textInputAction: TextInputAction.done,
-                validator: (value) =>
-                    validateConfirmPassword(value, _password.text),
-                onSubmitted: (_) => _submit(),
-              ),
-            ],
-            if (!_isSignUp)
-              Align(
-                alignment: Alignment.centerRight,
-                child: ShadButton.link(
-                  onPressed: isLoading
-                      ? null
-                      : () => ForgotPasswordSheet.show(
-                          context,
-                          initialEmail: _email.text.trim(),
-                        ),
-                  child: const Text('Forgot password?'),
-                ),
-              )
-            else
-              const SizedBox(height: AppSpacing.lg),
-            const SizedBox(height: AppSpacing.sm),
-            LoadingButton(
-              key: const Key('login.submit'),
-              width: double.infinity,
-              isLoading: isLoading,
-              onPressed: _submit,
-              loadingLabel: Text(
-                _isSignUp ? 'Creating account...' : 'Signing in...',
-              ),
-              child: Text(_isSignUp ? 'Create account' : 'Sign in'),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Row(
-              children: [
-                const Expanded(child: ShadSeparator.horizontal()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.md,
-                  ),
-                  child: Text('or', style: textTheme.muted),
-                ),
-                const Expanded(child: ShadSeparator.horizontal()),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            ShadButton.outline(
-              width: double.infinity,
-              // TODO: implement Google sign-in
-              onPressed: () => AppToast.info('Coming soon'),
-              leading: const Icon(LucideIcons.logIn, size: 16),
-              child: const Text('Continue with Google'),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  _isSignUp
-                      ? 'Already have an account?'
-                      : "Don't have an account?",
-                  style: textTheme.muted,
-                ),
-                ShadButton.link(
-                  key: const Key('login.toggle'),
-                  onPressed: isLoading ? null : _toggleMode,
-                  child: Text(_isSignUp ? 'Sign in' : 'Sign up'),
-                ),
-              ],
+            ShadButton.link(
+              key: const Key('login.toggle'),
+              onPressed: isLoading ? null : _toggleMode,
+              child: Text(_isSignUp ? 'Sign in' : 'Sign up'),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
@@ -350,6 +385,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 
   Widget _obscureToggle() {
+    final cs = ShadTheme.of(context).colorScheme;
+    // Revealed fields fill with primary, so the icon must not be primary.
+    final color = _obscure ? cs.mutedForeground : cs.primaryForeground;
+
     return SizedBox.square(
       dimension: 24,
       child: OverflowBox(
@@ -358,6 +397,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         child: ShadIconButton.ghost(
           iconSize: 18,
           padding: const EdgeInsets.all(2),
+          foregroundColor: color,
+          hoverForegroundColor: color,
           icon: Icon(_obscure ? LucideIcons.eyeOff : LucideIcons.eye),
           onPressed: () => setState(() => _obscure = !_obscure),
         ),

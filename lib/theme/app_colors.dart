@@ -13,6 +13,9 @@ abstract final class AppColors {
   static const Color primary = Color(0xFF6156E2);
   static const Color onPrimary = Color(0xFFFFFFFF);
 
+  /// Not from Figma: pink end of the logo gradient, paired with [primary].
+  static const Color brandPink = Color(0xFFE0559F);
+
   static const Color textPrimary = Color(0xFFF2F2F2);
   static const Color textSecondary = Color(0xFFDEDEDE);
   static const Color textMuted = Color(0xFF8E8E8E);
