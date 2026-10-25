@@ -350,8 +350,10 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           child: const Text('Continue with Google'),
         ),
         const SizedBox(height: AppSpacing.sm),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        // Wrap so the link drops to a new line under large text scales.
+        Wrap(
+          alignment: WrapAlignment.center,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Text(
               _isSignUp ? 'Already have an account?' : "Don't have an account?",

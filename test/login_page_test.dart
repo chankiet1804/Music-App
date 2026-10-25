@@ -9,6 +9,7 @@ import 'package:music_app/ui/login/login.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 
 import 'fakes/fake_auth_service.dart';
+import 'helpers/screen_sizes.dart';
 
 const _email = Key('login.email');
 const _password = Key('login.password');
@@ -16,13 +17,20 @@ const _confirm = Key('login.confirm');
 const _submit = Key('login.submit');
 const _toggle = Key('login.toggle');
 
-Future<FakeAuthService> _pump(WidgetTester tester) async {
+Future<FakeAuthService> _pump(
+  WidgetTester tester, {
+  ScreenSize? screen,
+}) async {
   final service = FakeAuthService();
   addTearDown(service.dispose);
-  // Tall surface so the whole scrollable form is laid out.
-  tester.view.physicalSize = const Size(800, 1600);
-  tester.view.devicePixelRatio = 1;
-  addTearDown(tester.view.reset);
+  if (screen != null) {
+    setScreenSize(tester, screen);
+  } else {
+    // Tall surface so the whole scrollable form is laid out.
+    tester.view.physicalSize = const Size(800, 1600);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+  }
   // Keeps the endless starfield still so pumpAndSettle can settle.
   tester.platformDispatcher.accessibilityFeaturesTestValue =
       const FakeAccessibilityFeatures(disableAnimations: true);
@@ -159,5 +167,21 @@ void main() {
     expect(service.calls, ['reset:a@b.com']);
     expect(find.text('Reset password'), findsNothing);
     expect(find.textContaining('reset link has been sent'), findsOneWidget);
+  });
+
+  testWidgetsOnScreens('sign in and sign up lay out without overflow', (
+    tester,
+    screen,
+  ) async {
+    await _pump(tester, screen: screen);
+    await tester.pumpAndSettle();
+    expect(find.byKey(_submit), findsOneWidget);
+
+    // Small screens scroll the form, so bring the toggle into view first.
+    await tester.ensureVisible(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(_toggle));
+    await tester.pumpAndSettle();
+    expect(find.byKey(_confirm), findsOneWidget);
   });
 }
